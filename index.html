@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Speed Typing Game</title>
   <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -724,6 +725,10 @@
     const AUTHORIZED_PASSWORDS = ['duke bestfriend', 'chloe idk', 'terrence cool', 'riyaz owner'];
     const OWNER_PASSWORD = 'riyaz coder';
     const PRIVILEGED_ACCOUNT_EMAIL = 'bigfanoe@gmail.com';
+    const OWNER_ACCOUNT_EMAILS = new Set(['bigfanoe@gmail.com', '952976@omardblairk8.com']);
+    const SUPABASE_URL = 'https://azochnzngwalhuvlogof.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_B8R8BniGtAdhIW3f1xBQhg_BPMr4AvR';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
     let passwordMode = 'admin';
     let resetCaptchaToken = '';
 
@@ -789,10 +794,38 @@
       return JSON.parse(localStorage.getItem('typingDisplayNames') || '{}');
     }
 
+    function isOwnerAccount(email) {
+      return OWNER_ACCOUNT_EMAILS.has((email || '').toLowerCase());
+    }
+
+    async function syncProfileCache(user) {
+      if (!user?.email) return;
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('email, display_name, role')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (!profile) return;
+      const names = getDisplayNames();
+      const roles = JSON.parse(localStorage.getItem('typingRoles') || '{}');
+      if (profile.display_name) names[user.email.toLowerCase()] = profile.display_name;
+      if (profile.role) roles[user.email.toLowerCase()] = profile.role.toLowerCase();
+      localStorage.setItem('typingDisplayNames', JSON.stringify(names));
+      localStorage.setItem('typingRoles', JSON.stringify(roles));
+    }
+
+    async function setSignedInUser(user) {
+      if (!user?.email) return;
+      const email = user.email.toLowerCase();
+      sessionStorage.setItem('typingCurrentUser', email);
+      await syncProfileCache(user);
+      updateAccountUI();
+    }
+
     function hasNormalPanelAccess() {
       const email = sessionStorage.getItem('typingCurrentUser');
       if (!email) return false;
-      if (email === PRIVILEGED_ACCOUNT_EMAIL) return true;
+      if (isOwnerAccount(email)) return true;
       const displayName = getDisplayNames()[email] || email.split('@')[0];
       const roles = JSON.parse(localStorage.getItem('typingRoles') || '{}');
       const testerAndHigherRoles = new Set(['tester', 'champion', 'admin', 'senior admin', 'co-owner', 'developer', 'coder', 'designer', 'community manager', 'support', 'helper', 'guide', 'mentor', 'teacher', 'researcher', 'writer', 'editor', 'translator', 'event host', 'organizer', 'content creator', 'streamer', 'early supporter', 'founder', 'veteran', 'legend', 'expert', 'pro', 'speed typist', 'accuracy master', 'streak master', 'record holder', 'bug hunter', 'qa lead', 'security reviewer', 'ambassador', 'honorary member']);
@@ -802,7 +835,7 @@
     function hasOwnerPanelAccess() {
       const email = sessionStorage.getItem('typingCurrentUser');
       if (!email) return false;
-      if (email === PRIVILEGED_ACCOUNT_EMAIL) return true;
+      if (isOwnerAccount(email)) return true;
       const displayName = getDisplayNames()[email] || email.split('@')[0];
       const roles = JSON.parse(localStorage.getItem('typingRoles') || '{}');
       return roles[email.toLowerCase()] === 'honorary member' || roles[displayName.toLowerCase()] === 'honorary member';
@@ -815,7 +848,7 @@
         roleValueEl.innerText = 'User';
         return;
       }
-      if (email === PRIVILEGED_ACCOUNT_EMAIL) {
+      if (isOwnerAccount(email)) {
         roleValueEl.innerText = 'Owner';
         return;
       }
@@ -872,8 +905,11 @@
       authErrorEl.innerText = '';
     }
 
-    localStorage.removeItem('typingCurrentUser');
     updateAccountUI();
+    supabaseClient.auth.getSession().then(async ({ data }) => {
+      if (data.session?.user) await setSignedInUser(data.session.user);
+      else updateAccountUI();
+    });
 
     document.getElementById('bestWpm').innerText = bestScore;
 
@@ -1294,7 +1330,7 @@
       displayNameInputEl.focus();
     });
     document.getElementById('cancelName').addEventListener('click', () => nameDialogEl.classList.remove('is-visible'));
-    nameFormEl.addEventListener('submit', event => {
+    nameFormEl.addEventListener('submit', async event => {
       event.preventDefault();
       const email = sessionStorage.getItem('typingCurrentUser');
       if (!email) return;
@@ -1306,6 +1342,11 @@
       }
       names[email] = trimmedName;
       localStorage.setItem('typingDisplayNames', JSON.stringify(names));
+      const { error } = await supabaseClient.from('profiles').update({ display_name: trimmedName }).eq('email', email);
+      if (error) {
+        nameErrorEl.innerText = 'Unable to save your name right now.';
+        return;
+      }
       nameDialogEl.classList.remove('is-visible');
       updateAccountUI();
     });
@@ -1329,8 +1370,18 @@
       updateAccountUI();
     });
     logoutBtnEl.addEventListener('click', () => {
-      sessionStorage.removeItem('typingCurrentUser');
-      updateAccountUI();
+      supabaseClient.auth.signOut().then(() => {
+        sessionStorage.removeItem('typingCurrentUser');
+        updateAccountUI();
+      });
+    });
+
+    supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) await setSignedInUser(session.user);
+      else {
+        sessionStorage.removeItem('typingCurrentUser');
+        updateAccountUI();
+      }
     });
 
     const ownerPanelEl = document.querySelector('.owner-panel');
@@ -1368,7 +1419,7 @@
       minimizeAdminBtnEl.setAttribute('aria-label', isMinimized ? 'Restore owner panel' : 'Minimize owner panel');
     });
 
-    document.getElementById('giveRoleBtn').addEventListener('click', () => {
+    document.getElementById('giveRoleBtn').addEventListener('click', async () => {
       const targetName = roleUserInputEl.value.trim().replace(/^user:\s*/i, '');
       const currentEmail = sessionStorage.getItem('typingCurrentUser') || '';
       const displayNames = getDisplayNames();
@@ -1382,24 +1433,32 @@
         roleMessageEl.innerText = 'You cannot rank yourself.';
         return;
       }
-      const ownerDisplayName = displayNames[PRIVILEGED_ACCOUNT_EMAIL] || PRIVILEGED_ACCOUNT_EMAIL.split('@')[0];
-      if (targetName.toLowerCase() === PRIVILEGED_ACCOUNT_EMAIL || targetName.toLowerCase() === ownerDisplayName.toLowerCase()) {
+      const ownerDisplayNames = [...OWNER_ACCOUNT_EMAILS].map(ownerEmail => displayNames[ownerEmail] || ownerEmail.split('@')[0]);
+      if (OWNER_ACCOUNT_EMAILS.has(targetName.toLowerCase()) || ownerDisplayNames.some(ownerName => targetName.toLowerCase() === ownerName.toLowerCase())) {
         roleMessageEl.innerText = 'Unable to change owners role!';
         return;
       }
-      const accounts = getAccounts();
       const normalizedTarget = targetName.toLowerCase();
-      const targetEmail = Object.keys(accounts).find(accountEmail => {
-        const accountDisplayName = displayNames[accountEmail] || accountEmail.split('@')[0];
-        return accountEmail.toLowerCase() === normalizedTarget || accountDisplayName.toLowerCase() === normalizedTarget;
-      });
-      if (!targetEmail) {
+      const { data: targetProfiles, error: profileError } = await supabaseClient
+        .from('profiles')
+        .select('id, email, display_name, role');
+      if (profileError) {
+        roleMessageEl.innerText = 'Unable to load players right now.';
+        return;
+      }
+      const targetProfile = (targetProfiles || []).find(profile => profile.email?.toLowerCase() === normalizedTarget || profile.display_name?.toLowerCase() === normalizedTarget);
+      if (!targetProfile) {
         roleMessageEl.innerText = 'That player was not found on this device.';
         return;
       }
-      const roles = JSON.parse(localStorage.getItem('typingRoles') || '{}');
       const role = roleSelectEl.value;
-      roles[targetEmail.toLowerCase()] = role;
+      const { error: roleError } = await supabaseClient.from('profiles').update({ role }).eq('id', targetProfile.id);
+      if (roleError) {
+        roleMessageEl.innerText = 'Unable to update that player role right now.';
+        return;
+      }
+      const roles = JSON.parse(localStorage.getItem('typingRoles') || '{}');
+      roles[targetProfile.email.toLowerCase()] = role;
       localStorage.setItem('typingRoles', JSON.stringify(roles));
       roleMessageEl.innerText = `Role ${role} given to ${targetName}.`;
       roleMessageEl.classList.add('success');
@@ -1418,32 +1477,25 @@
       authErrorEl.classList.remove('success');
       const email = authEmailEl.value.trim().toLowerCase();
       const password = authPasswordEl.value;
-      const accounts = getAccounts();
       if (authMode === 'signup') {
-        if (accounts[email]) {
-          authErrorEl.innerText = 'An account with that email already exists.';
-          return;
-        }
         if (password !== authConfirmPasswordEl.value) {
           authErrorEl.innerText = 'Passwords do not match.';
           return;
         }
-        const passwordHash = await hashPassword(password);
-        if (Object.values(accounts).includes(passwordHash)) {
-          authErrorEl.innerText = 'This password is in use by another account. Sorry!';
+        const { error } = await supabaseClient.auth.signUp({ email, password });
+        if (error) {
+          authErrorEl.innerText = error.message;
           return;
         }
-        accounts[email] = passwordHash;
-        localStorage.setItem('typingAccounts', JSON.stringify(accounts));
         setAuthMode('login');
         authEmailEl.value = email;
         authPasswordEl.value = '';
-        authErrorEl.innerText = 'Account created. Log in to continue.';
+        authErrorEl.innerText = 'Account created. Check your email if confirmation is enabled, then log in.';
         authErrorEl.classList.add('success');
         authPasswordEl.focus();
         return;
       } else if (authMode === 'forgot') {
-        if (email === PRIVILEGED_ACCOUNT_EMAIL) {
+        if (isOwnerAccount(email)) {
           authErrorEl.innerText = 'This account password cannot be changed.';
           return;
         }
@@ -1451,37 +1503,27 @@
           authErrorEl.innerText = 'Complete the hCaptcha check before resetting your password.';
           return;
         }
-        if (!accounts[email]) {
-          authErrorEl.innerText = 'No local account was found for that email.';
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+        if (error) {
+          authErrorEl.innerText = error.message;
           return;
         }
-        if (password !== authConfirmPasswordEl.value) {
-          authErrorEl.innerText = 'Passwords do not match.';
-          return;
-        }
-        const passwordHash = await hashPassword(password);
-        const otherAccountUsesPassword = Object.entries(accounts).some(([accountEmail, accountPasswordHash]) => accountEmail !== email && accountPasswordHash === passwordHash);
-        if (otherAccountUsesPassword) {
-          authErrorEl.innerText = 'This password is in use by another account. Sorry!';
-          return;
-        }
-        accounts[email] = passwordHash;
-        localStorage.setItem('typingAccounts', JSON.stringify(accounts));
         setAuthMode('login');
         authEmailEl.value = email;
         authPasswordEl.value = '';
-        authErrorEl.innerText = 'Password reset. Log in to continue.';
+        authErrorEl.innerText = 'Password reset email sent. Follow its link to choose a new password.';
         authErrorEl.classList.add('success');
         resetCaptchaToken = '';
         if (window.hcaptcha && window.hcaptcha.reset) window.hcaptcha.reset();
         authPasswordEl.focus();
         return;
-      } else if (!accounts[email] || accounts[email] !== await hashPassword(password)) {
-        authErrorEl.innerText = 'Incorrect email or password.';
+      }
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) {
+        authErrorEl.innerText = error.message;
         return;
       }
-      sessionStorage.setItem('typingCurrentUser', email);
-      updateAccountUI();
+      await setSignedInUser(data.user);
       closeAuthDialog();
     });
 
