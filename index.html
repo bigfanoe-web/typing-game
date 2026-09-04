@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Speed Typing Game</title>
+  <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: #eef3f1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 24px;
+      color: #263238;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(300px, 390px);
+      gap: 22px;
+      width: min(1280px, 100%);
+      align-items: start;
+    }
+
+    .workspace:not(.panel-open):not(.owner-open) { grid-template-columns: minmax(0, 820px); justify-content: center; }
+    .workspace:not(.panel-open):not(.owner-open) .admin-stack { display: none; }
+    .admin-stack {
+      display: none;
+      gap: 20px;
+      min-width: 0;
+      width: 100%;
+      align-items: start;
+    }
+    .admin-stack > .owner-panel,
+    .admin-stack > .admin-panel {
+      display: none;
+    }
+    .workspace.panel-open .admin-stack,
+    .workspace.owner-open .admin-stack {
+      display: grid;
+    }
+    .workspace.panel-open .admin-stack > .admin-panel {
+      display: block;
+    }
+    .workspace.owner-open .admin-stack > .owner-panel {
+      display: block;
+    }
+
+    .container,
+    .admin-panel,
+    .owner-panel {
+      width: 100%;
+    }
+
+    .container {
+      background-color: #ffffff;
+      border: 1px solid #dce6e2;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    .owner-panel,
+    .admin-panel {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 38%, #111827 100%);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      border-radius: 12px;
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.38);
+      color: #e2e8f0;
+      padding: 18px 16px;
+    }
+
+    .owner-panel .admin-heading h2,
+    .admin-panel .admin-heading h2,
+    .owner-panel .feature-label,
+    .admin-panel .feature-label,
+    .owner-panel .feature-value,
+    .admin-panel .feature-value,
+    .owner-panel .role-message,
+    .admin-panel .role-message,
+    .owner-panel .role-form input,
+    .admin-panel .role-form input,
+    .owner-panel .role-form select,
+    .admin-panel .role-form select,
+    .owner-panel .role-form button,
+    .admin-panel .role-form button,
+    .owner-panel .admin-heading-actions button,
+    .admin-panel .admin-heading-actions button {
+      color: #e2e8f0;
+    }
+
+    .owner-panel .admin-heading,
+    .admin-panel .admin-heading {
+      border-bottom-color: rgba(148, 163, 184, 0.35);
+    }
+
+    .owner-panel .feature,
+    .admin-panel .feature {
+      border-bottom-color: rgba(148, 163, 184, 0.2);
+    }
+
+    .owner-panel .role-form input,
+    .owner-panel .role-form select,
+    .admin-panel .role-form input,
+    .admin-panel .role-form select,
+    .admin-panel .feature select,
+    .admin-panel .feature input[type='text'],
+    .admin-panel .feature input[type='number'] {
+      background: rgba(15, 23, 42, 0.7);
+      border-color: rgba(148, 163, 184, 0.35);
+    }
+
+    .owner-panel .small-btn,
+    .admin-panel .small-btn {
+      background: rgba(148, 163, 184, 0.12);
+      border-color: rgba(148, 163, 184, 0.35);
+      color: #f8fafc;
+    }
+
+    .owner-panel .small-btn:hover,
+    .admin-panel .small-btn:hover {
+      border-color: rgba(96, 165, 250, 0.8);
+      color: #dbeafe;
+    }
+
+    .container {
+      padding: 30px;
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    .account-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; text-align: left; }
+    .account-status { color: #607d8b; font-size: 0.82rem; }
+    .account-status strong { color: #263238; }
+    .account-actions { display: flex; align-items: center; gap: 18px; }
+    .account-actions button { margin: 0; }
+    .account-actions .delete-account-btn { color: #b42318; border-color: #f0b4ae; }
+    .account-actions .delete-account-btn:hover { color: #ffffff; border-color: #c62828; background: #c62828; }
+
+    .stats-container {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .stat-box {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: #6c757d;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+
+    .quote-display {
+      font-size: 1.25rem;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      padding: 15px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      text-align: left;
+      min-height: 80px;
+      user-select: none;
+    }
+
+    .correct {
+      color: #2e7d32;
+      background-color: #e8f5e9;
+    }
+
+    .incorrect {
+      color: #c62828;
+      background-color: #ffebee;
+      text-decoration: underline;
+    }
+
+    .quote-input {
+      width: 100%;
+      height: 100px;
+      padding: 12px;
+      font-size: 1.1rem;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      transition: border-color 0.2s;
+    }
+
+    .admin-access {
+      margin: 14px 0 0;
+      color: #78909c;
+      font-size: 0.75rem;
+    }
+
+    .password-dialog {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(38, 50, 56, 0.38);
+      z-index: 5;
+    }
+
+    .password-dialog.is-visible { display: flex; }
+
+    .password-box {
+      width: min(360px, 100%);
+      padding: 24px;
+      border-radius: 10px;
+      background: white;
+      box-shadow: 0 16px 40px rgba(38, 50, 56, 0.2);
+    }
+
+    .password-box h2 { margin: 0 0 7px; font-size: 1.25rem; }
+    .password-box p { margin: 0 0 14px; color: #607d8b; font-size: 0.85rem; }
+    .password-box input { width: 100%; padding: 10px; border: 1px solid #cddbd6; border-radius: 5px; font-size: 1rem; }
+    .password-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .password-actions button { flex: 1; margin: 0; }
+    .password-error { min-height: 18px; margin-top: 9px; color: #c62828; font-size: 0.78rem; }
+
+    .auth-dialog { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(38, 50, 56, 0.38); z-index: 6; }
+    .auth-dialog.is-visible { display: flex; }
+    .auth-box { width: min(390px, 100%); padding: 24px; border-radius: 10px; background: white; box-shadow: 0 16px 40px rgba(38, 50, 56, 0.2); }
+    .auth-box h2 { margin: 0 0 7px; font-size: 1.25rem; }
+    .auth-box p { margin: 0 0 16px; color: #607d8b; font-size: 0.85rem; }
+    .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 14px; }
+    .auth-forgot { display: block; margin: 12px 0 0 auto; padding: 0; border: 0; color: #2474a8; background: transparent; cursor: pointer; font-size: 0.78rem; }
+    .auth-tab.is-active { color: white; background: #3498db; border-color: #3498db; }
+
+    .word-dialog { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(38, 50, 56, 0.38); z-index: 6; }
+    .word-dialog.is-visible { display: flex; }
+    .word-box { width: min(450px, 100%); padding: 24px; border-radius: 10px; background: white; box-shadow: 0 16px 40px rgba(38, 50, 56, 0.2); max-height: 70vh; overflow-y: auto; }
+    .word-box h2 { margin: 0 0 14px; font-size: 1.4rem; color: #2474a8; }
+    .word-content { color: #455a64; line-height: 1.6; margin-bottom: 16px; font-size: 0.95rem; }
+    .word-content p { margin: 8px 0; }
+    .word-content strong { color: #263238; }
+    .word-content em { color: #607d8b; font-style: italic; }
+    .auth-field { display: block; margin-top: 11px; color: #455a64; font-size: 0.8rem; font-weight: bold; }
+    .auth-field input { width: 100%; margin-top: 5px; padding: 10px; border: 1px solid #cddbd6; border-radius: 5px; font-size: 1rem; }
+    .auth-error { min-height: 18px; margin-top: 9px; color: #c62828; font-size: 0.78rem; }
+    .auth-error.success { color: #2e7d32; }
+    .name-dialog { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(38, 50, 56, 0.38); z-index: 6; }
+    .name-dialog.is-visible { display: flex; }
+
+    .admin-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid #e4ece9;
+      padding-bottom: 14px;
+      margin-bottom: 14px;
+    }
+
+    .admin-heading-actions { display: flex; gap: 6px; }
+    .admin-heading-actions button { margin: 0; padding: 5px 8px; }
+    .owner-panel.is-minimized .feature { display: none; }
+    .owner-panel.is-minimized { padding-bottom: 14px; }
+
+    .admin-heading h2 {
+      font-size: 1.15rem;
+      margin: 0;
+      color: #263238;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #f0ad4e;
+    }
+
+    .feature {
+      padding: 11px 0;
+      border-bottom: 1px solid #edf2f0;
+    }
+
+    .feature:last-child { border-bottom: 0; }
+
+    .role-form { display: grid; gap: 8px; margin-top: 8px; }
+    .role-form input,
+    .role-form select { width: 100%; padding: 8px; border: 1px solid #cddbd6; border-radius: 5px; color: #263238; background: #fbfdfc; }
+    .role-form button { width: 100%; margin: 0; }
+    .role-message { min-height: 18px; margin-top: 8px; color: #c62828; font-size: 0.78rem; }
+    .role-message.success { color: #2e7d32; }
+
+    .role-announcement { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 24px; background: rgba(38, 50, 56, 0.48); z-index: 7; }
+    .role-announcement.is-visible { display: flex; }
+    .role-announcement strong { max-width: 900px; color: #ffffff; font-size: clamp(2.2rem, 8vw, 6rem); line-height: 1; text-align: center; text-transform: uppercase; text-shadow: 0 4px 18px rgba(0, 0, 0, 0.35); }
+
+    .feature-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.82rem;
+      font-weight: bold;
+      color: #455a64;
+    }
+
+    .feature-value {
+      color: #3498db;
+      font-size: 0.8rem;
+      font-weight: normal;
+    }
+
+    .role-status-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 11px; margin-bottom: 12px; border: 1px solid rgba(96, 165, 250, 0.35); border-radius: 6px; background: rgba(96, 165, 250, 0.1); color: #e2e8f0; }
+    .role-status-value { color: #93c5fd; font-weight: bold; }
+
+    .language-picker,
+    .background-picker {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      margin: -8px 0 16px;
+      color: #607d8b;
+      font-size: 0.8rem;
+    }
+
+    .language-picker select,
+    .background-picker select {
+      max-width: 190px;
+      padding: 6px 8px;
+      border: 1px solid #cddbd6;
+      border-radius: 5px;
+      color: #263238;
+      background: #fbfdfc;
+    }
+
+    .feature select,
+    .feature input[type='text'],
+    .feature input[type='number'] {
+      width: 100%;
+      margin-top: 7px;
+      padding: 7px 8px;
+      border: 1px solid #cddbd6;
+      border-radius: 5px;
+      color: #263238;
+      background: #fbfdfc;
+    }
+
+    .feature-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+      margin-top: 7px;
+    }
+
+    .small-btn {
+      border: 1px solid #cddbd6;
+      background: #f6faf8;
+      border-radius: 5px;
+      padding: 7px 5px;
+      color: #455a64;
+      cursor: pointer;
+      font-size: 0.76rem;
+    }
+
+    .small-btn:hover { border-color: #3498db; color: #2474a8; }
+
+    .btn {
+      border: 1px solid #3498db;
+      background: #3498db;
+      border-radius: 5px;
+      padding: 10px 16px;
+      color: #ffffff;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: bold;
+    }
+
+    .btn:hover { background: #2980b9; border-color: #2980b9; }
+
+    .button-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .button-group .btn { flex: 1; min-width: 140px; }
+    .button-group .small-btn { flex: 1; min-width: 100px; }
+    .public-learning { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 7px; margin-top: 18px; color: #607d8b; font-size: 0.8rem; }
+    .public-learning .small-btn { margin: 0; }
+
+    .learning-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 7px; }
+    .learning-dialog { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 23, 42, 0.58); z-index: 8; }
+    .learning-dialog.is-visible { display: flex; }
+    .learning-box { width: min(760px, 100%); max-height: 86vh; overflow-y: auto; padding: 24px; border: 1px solid #dce6e2; border-radius: 10px; background: #ffffff; box-shadow: 0 18px 50px rgba(15, 23, 42, 0.3); }
+    .learning-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .learning-heading h2 { margin: 0; color: #263238; }
+    .learning-tabs { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+    .learning-tab.is-active { color: #ffffff; background: #3498db; border-color: #3498db; }
+    .learning-search { display: flex; gap: 8px; margin-bottom: 16px; }
+    .learning-search input { flex: 1; min-width: 0; padding: 9px; border: 1px solid #cddbd6; border-radius: 5px; font-size: 0.95rem; }
+    .learning-results { display: grid; gap: 10px; }
+    .learning-card { padding: 13px; border: 1px solid #dce6e2; border-radius: 7px; text-align: left; background: #f8fbfa; }
+    .learning-card h3 { margin: 0 0 6px; color: #2474a8; font-size: 1rem; }
+    .learning-card p { margin: 5px 0; color: #455a64; font-size: 0.88rem; line-height: 1.45; }
+    .learning-card .small-btn { margin-top: 7px; }
+    .google-results-frame { width: 100%; height: 360px; margin-bottom: 10px; border: 1px solid #dce6e2; border-radius: 7px; background: #ffffff; }
+
+    .auto-typer-active {
+      color: #ffffff;
+      border-color: #1a9b8c;
+      background: #1a9b8c;
+      animation: typerPulse 1s ease-in-out infinite;
+    }
+
+    .auto-typer-waiting {
+      color: #ffffff;
+      border-color: #f0ad4e;
+      background: #f0ad4e;
+      animation: typerPulse 1s ease-in-out infinite;
+    }
+
+    @keyframes typerPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(26, 155, 140, 0.35); }
+      50% { box-shadow: 0 0 0 7px rgba(26, 155, 140, 0); }
+    }
+
+    .toggle {
+      position: relative;
+      width: 35px;
+      height: 19px;
+      appearance: none;
+      background: #cbd8d4;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      top: 2px;
+      left: 2px;
+      border-radius: 50%;
+      background: white;
+      transition: transform 0.2s;
+    }
+
+    .toggle:checked { background: #3498db; }
+    .toggle:checked::after { transform: translateX(16px); }
+
+    @media (max-width: 760px) {
+      body { align-items: flex-start; padding: 14px; }
+      .workspace { grid-template-columns: 1fr; }
+      .admin-stack { grid-row: 1; }
+      .container { padding: 22px 16px; }
+      .admin-panel, .owner-panel { max-height: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="workspace" id="workspace">
+    <div class="container">
+      <div class="account-bar">
+        <div class="account-status" id="accountStatus">Playing as <strong>Guest</strong></div>
+        <div class="account-actions"><button class="small-btn" id="changeNameBtn" type="button" hidden>Change name</button><button class="small-btn delete-account-btn" id="deleteAccountBtn" type="button" hidden>Delete account</button><button class="small-btn" id="loginBtn" type="button">Log in</button><button class="small-btn" id="logoutBtn" type="button" hidden>Log out</button></div>
+      </div>
+      <h1>Speed Typing Test</h1>
+      <div class="language-picker"><label for="languageSelect">Language</label><select id="languageSelect"></select></div>
+      <div class="background-picker"><label for="backgroundSelect">Background</label><select id="backgroundSelect" aria-label="Background selector"></select></div>
+      
+      <div class="stats-container">
+      <div class="stat-box">
+        <span class="stat-label">Time</span>
+        <span class="stat-value" id="timer">60s</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-label">WPM</span>
+        <span class="stat-value" id="wpm">0</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-label">Accuracy</span>
+        <span class="stat-value" id="accuracy">100%</span>
+      </div>
+      </div>
+
+      <div class="quote-display" id="quoteDisplay">Click restart to begin...</div>
+      <textarea class="quote-input" id="quoteInput" placeholder="Start typing here when ready..." disabled></textarea>
+      
+      <div class="button-group">
+        <button class="btn" id="startBtn">Start Game</button>
+        <button class="small-btn" id="nextWordBtn" type="button" title="Skip to next word">Next word</button>
+        <button class="small-btn" id="askGoogleBtn" type="button" title="Search Google for the current word">Ask Google</button>
+      </div>
+      <div class="public-learning" aria-label="Learning subjects">
+        <span>Explore</span>
+        <button class="small-btn" type="button" data-learning-subject="math">Math</button>
+        <button class="small-btn" type="button" data-learning-subject="reading">Reading</button>
+        <button class="small-btn" type="button" data-learning-subject="history">History</button>
+        <button class="small-btn" type="button" data-learning-subject="humanities">Humanities</button>
+      </div>
+    </div>
+
+    <div class="admin-stack">
+    <aside class="owner-panel" aria-label="Riyaz owner panel">
+      <div class="admin-heading"><h2>RIYAZ ONLY</h2><div class="admin-heading-actions"><button class="small-btn" id="minimizeAdminBtn" type="button" aria-label="Minimize owner panel">Minimize</button><button class="small-btn" id="closeOwnerBtn" type="button" aria-label="Close owner panel">Close</button></div></div>
+      <section class="feature"><div class="feature-label">Role management</div><div class="role-form"><input id="roleUserInput" type="text" placeholder="Give role user: name" /><select id="roleSelect"><option value="user">User</option><option value="vip">VIP</option><option value="moderator">Moderator</option><option value="tester">Tester</option><option value="champion">Champion</option><option value="admin">Admin</option><option value="senior admin">Senior Admin</option><option value="co-owner">Co-Owner</option><option value="developer">Developer</option><option value="coder">Coder</option><option value="designer">Designer</option><option value="community manager">Community Manager</option><option value="support">Support</option><option value="helper">Helper</option><option value="guide">Guide</option><option value="mentor">Mentor</option><option value="teacher">Teacher</option><option value="researcher">Researcher</option><option value="writer">Writer</option><option value="editor">Editor</option><option value="translator">Translator</option><option value="event host">Event Host</option><option value="organizer">Organizer</option><option value="content creator">Content Creator</option><option value="streamer">Streamer</option><option value="early supporter">Early Supporter</option><option value="founder">Founder</option><option value="veteran">Veteran</option><option value="legend">Legend</option><option value="expert">Expert</option><option value="pro">Pro</option><option value="speed typist">Speed Typist</option><option value="accuracy master">Accuracy Master</option><option value="streak master">Streak Master</option><option value="record holder">Record Holder</option><option value="bug hunter">Bug Hunter</option><option value="qa lead">QA Lead</option><option value="security reviewer">Security Reviewer</option><option value="ambassador">Ambassador</option><option value="honorary member">Honorary Member</option></select><button class="small-btn" id="giveRoleBtn" type="button">Give role</button></div><div class="role-message" id="roleMessage" aria-live="polite"></div></section>
+      <section class="feature"><div class="feature-label">Owner access</div><div class="feature-value">Use Close to lock this panel.</div></section>
+    </aside>
+
+    <aside class="admin-panel" aria-label="Admin panel">
+      <div class="admin-heading"><h2>Admin panel</h2><div class="admin-heading-actions"><span class="status-dot" id="statusDot" title="Ready"></span><button class="small-btn" id="closeAdminBtn" type="button" aria-label="Close admin panel">Close</button></div></div>
+      <div class="role-status-bar" aria-live="polite"><span>Your role</span><span class="role-status-value" id="currentRoleValue">User</span></div>
+
+      <section class="feature"><div class="feature-label">1. Player profile</div><input id="playerName" type="text" placeholder="Enter player name" /></section>
+      <section class="feature"><div class="feature-label">2. Test duration <span class="feature-value" id="durationValue">60 seconds</span></div><select id="durationSelect"><option value="5">5 seconds</option><option value="10">10 seconds</option><option value="15">15 seconds</option><option value="20">20 seconds</option><option value="30">30 seconds</option><option value="45">45 seconds</option><option value="60" selected>60 seconds</option><option value="75">75 seconds</option><option value="90">90 seconds</option><option value="120">2 minutes</option><option value="150">2 minutes 30 seconds</option><option value="180">3 minutes</option><option value="240">4 minutes</option><option value="300">5 minutes</option><option value="360">6 minutes</option><option value="420">7 minutes</option><option value="480">8 minutes</option><option value="600">10 minutes</option><option value="900">15 minutes</option><option value="1200">20 minutes</option><option value="1500">25 minutes</option><option value="1800">30 minutes</option><option value="2400">40 minutes</option><option value="3600">60 minutes</option></select></section>
+      <section class="feature"><div class="feature-label">3. Difficulty</div><select id="difficultySelect"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select></section>
+      <section class="feature"><div class="feature-label">4. Sound effects <input class="toggle" id="soundToggle" type="checkbox" checked /></div></section>
+      <section class="feature"><div class="feature-label">6. Auto-new quote <input class="toggle" id="autoQuoteToggle" type="checkbox" checked /></div></section>
+      <section class="feature"><div class="feature-label">7. Current session <span class="feature-value" id="sessionValue">Ready</span></div><div class="feature-actions"><button class="small-btn" id="pauseBtn">Pause</button><button class="small-btn" id="newQuoteBtn">New quote</button></div></section>
+      <section class="feature"><div class="feature-label">8. Best WPM <span class="feature-value" id="bestWpm">0</span></div></section>
+      <section class="feature"><div class="feature-label">9. Highest WPM goal <span class="feature-value">WPM</span></div><input id="wpmGoalInput" type="number" min="1" max="1000" value="40" /></section>
+      <section class="feature"><div class="feature-label">10. Word length</div><select id="wordLengthSelect"><option value="any" selected>Any length</option><option value="short">Short words</option><option value="medium">Medium words</option><option value="long">Long words</option></select></section>
+      <section class="feature"><div class="feature-label">11. Auto Typer <span class="feature-value" id="autoTyperStatus">Continuous</span><input class="toggle" id="autoTyperToggle" type="checkbox" /></div><div class="feature-label" style="margin-top: 9px;">Typing accuracy <span class="feature-value">%</span></div><input id="autoAccuracyInput" type="number" min="1" max="100" value="100" /></section>
+      <section class="feature"><div class="feature-label">12. Export results</div><div class="feature-actions"><button class="small-btn" id="exportBtn">Download CSV</button><button class="small-btn" id="clearBtn">Clear best</button></div></section>
+      <section class="feature"><div class="feature-label">13. Reset game</div><button class="small-btn" id="resetBtn" style="width: 100%; margin-top: 7px;">Reset all settings</button></section>
+      <section class="feature"><div class="feature-label">14. Learning center</div><div class="learning-actions"><button class="small-btn" type="button" data-learning-subject="math">Math</button><button class="small-btn" type="button" data-learning-subject="reading">Reading</button><button class="small-btn" type="button" data-learning-subject="history">History</button><button class="small-btn" type="button" data-learning-subject="humanities">Humanities</button></div></section>
+    </aside>
+    </div>
+  </main>
+
+  <div class="auth-dialog" id="authDialog" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <form class="auth-box" id="authForm">
+      <h2 id="authTitle">Log in</h2>
+      <p id="authDescription">Use your account to keep your typing profile on this device.</p>
+      <div class="auth-tabs"><button class="small-btn auth-tab is-active" id="loginTab" type="button">Log in</button><button class="small-btn auth-tab" id="signupTab" type="button">Sign up</button></div>
+      <label class="auth-field" for="authEmail">Email<input id="authEmail" type="email" autocomplete="email" required /></label>
+      <label class="auth-field" for="authPassword">Password<input id="authPassword" type="password" autocomplete="current-password" minlength="6" required /></label>
+      <label class="auth-field" id="confirmPasswordField" for="authConfirmPassword" hidden>Confirm password<input id="authConfirmPassword" type="password" autocomplete="new-password" minlength="6" /></label>
+      <button class="auth-forgot" id="forgotPasswordBtn" type="button">Forgot password?</button>
+      <div class="h-captcha" id="resetCaptcha" data-sitekey="e0688442-dce2-421c-81f8-e1a0d66a82d8" data-callback="onResetCaptchaSuccess" data-expired-callback="onResetCaptchaExpired" data-error-callback="onResetCaptchaExpired" hidden></div>
+      <div class="auth-error" id="authError" aria-live="polite"></div>
+      <div class="password-actions"><button class="small-btn" type="button" id="cancelAuth">Cancel</button><button class="btn" id="authSubmit" type="submit">Log in</button></div>
+    </form>
+  </div>
+
+  <div class="name-dialog" id="nameDialog" role="dialog" aria-modal="true" aria-labelledby="nameTitle">
+    <form class="auth-box" id="nameForm">
+      <h2 id="nameTitle">Change display name</h2>
+      <p>Choose the name other players will see.</p>
+      <label class="auth-field" for="displayNameInput">Display name<input id="displayNameInput" type="text" maxlength="24" required /></label>
+      <div class="auth-error" id="nameError" aria-live="polite"></div>
+      <div class="password-actions"><button class="small-btn" type="button" id="cancelName">Cancel</button><button class="btn" type="submit">Save name</button></div>
+    </form>
+  </div>
+
+  <div class="password-dialog" id="passwordDialog" role="dialog" aria-modal="true" aria-labelledby="passwordTitle">
+    <form class="password-box" id="passwordForm">
+      <h2 id="passwordTitle">Admin access</h2>
+      <p id="passwordDescription">Enter the admin password to open the controls.</p>
+      <input id="passwordInput" type="password" autocomplete="off" placeholder="Password" />
+      <div class="password-error" id="passwordError" aria-live="polite"></div>
+      <div class="password-actions"><button class="small-btn" type="button" id="cancelPassword">Cancel</button><button class="btn" type="submit">Unlock</button></div>
+    </form>
+  </div>
+
+  <div class="word-dialog" id="wordDialog" role="dialog" aria-modal="true" aria-labelledby="wordTitle">
+    <div class="word-box">
+      <h2 id="wordTitle"></h2>
+      <div id="wordContent" class="word-content">Loading...</div>
+      <div class="password-actions"><button class="small-btn" type="button" id="closeWordBtn">Close</button></div>
+    </div>
+  </div>
+
+  <div class="learning-dialog" id="learningDialog" role="dialog" aria-modal="true" aria-labelledby="learningTitle">
+    <div class="learning-box">
+      <div class="learning-heading"><h2 id="learningTitle">Learning center</h2><button class="small-btn" id="closeLearningBtn" type="button">Close</button></div>
+      <div class="learning-tabs" role="tablist"><button class="small-btn learning-tab is-active" type="button" data-learning-subject="math">Math</button><button class="small-btn learning-tab" type="button" data-learning-subject="reading">Reading</button><button class="small-btn learning-tab" type="button" data-learning-subject="history">History</button><button class="small-btn learning-tab" type="button" data-learning-subject="humanities">Humanities</button></div>
+      <div class="learning-search"><input id="learningSearchInput" type="search" placeholder="Search this subject" /><button class="btn" id="learningSearchBtn" type="button">Search</button></div>
+      <div class="learning-results" id="learningResults"></div>
+    </div>
+  </div>
+
+  <div class="role-announcement" id="roleAnnouncement" role="status" aria-live="assertive"><strong id="roleAnnouncementText"></strong></div>
+
+  <script>
+    console.info('please do not enter anything you see on the web we spent hours perfecting the game so it would be harmful to us if you cheated :)');
+
+    const SAMPLE_TEXTS = [
+      "the morning sun warmed the quiet kitchen while coffee filled the room",
+      "please bring the small blue book from the table near the window",
+      "a good plan starts with clear words and one simple step at a time",
+      "we learn faster when we practice often and stay calm under pressure",
+      "the train arrived early so everyone found a seat before the doors closed",
+      "open the folder and read each line slowly before you make a change"
+    ];
+
+    const WORD_BANK = 'a about after again all along also an and another any are around as ask at back be because become before begin best better between both bring build but by call can carry change clear close come could day different do down each early easy enough even every find first follow for from get give go good great hand have help her here high him his home how if important in into is it just keep kind know large last learn left less let life like little live long look made make many may me mean might more most move much must my near need never new next night no not now number of off often old on once one only open or other our out over own part people place plan play point put read real right room run said same saw say school seem she should show small so some something start still story such take tell than that the their them then there these they thing think this those three through time to today together too try turn two under until up us use very want water way we well what when where which while who will with work world would write year you your adventure afternoon agreement alignment ambitious analysis announcement application architecture argument astronomy attention beautiful beginning calculation celebration challenge character civilization classroom collection comfortable communication community comparison competition conclusion confidence connection consideration consistency construction creativity curiosity decision dedication description development difference discovery discussion education effective electricity employment encouragement environment equipment essential examination experience experiment explanation exploration expression extraordinary familiar foundation friendship generation geography government happiness harmony healthcare imagination improvement independence information inspiration instruction intelligence interesting introduction investigation knowledge laboratory language leadership learning library lightning literature management meaningful measurement memory messenger midnight movement neighborhood observation opportunity organization originality outstanding patience performance permission personality philosophy photograph playground pleasure pollution population preparation presentation probability process productive profession programming pronunciation protection quality question realistic reason reflection relationship remarkable responsibility science selection shadowing signature significant solution something somewhere spectacular standard strategy strength structure success suggestion technology temperature temporary teamwork thoughtful thunderstorm tradition training transformation transportation understanding university valuable variety vegetable yesterday abundance accessible accomplished accurate adaptable additional admirable adventurous affectionate analytical ancient applicable appreciative artistic astonishing authentic beneficial brilliant capable careful collaborative colorful courageous dependable determined delightful demanding digital dynamic economical efficient elegant energetic enormous enthusiastic essential ethical exceptional exciting flexible generous genuine graceful grateful historical honorable hopeful identical imaginative impressive inclusive independent influential innovative inspiring intentional joyful knowledgeable logical luxurious magnificent mysterious necessary noticeable nutritious objective observant optimistic organized passionate peaceful persistent practical precious predictable professional remarkable reliable resourceful respectful responsible revolutionary satisfying scholarly scientific sensible sincere skillful sophisticated successful supportive surprising sustainable talented technical thoughtful trustworthy unforgettable universal useful victorious vigorous welcoming wonderful'.split(' ');
+
+    const LANGUAGES = [
+      'English', 'Spanish', 'French', 'German', 'Italian', 'Portuguese', 'Dutch', 'Swedish', 'Norwegian', 'Danish',
+      'Finnish', 'Icelandic', 'Irish', 'Welsh', 'Polish', 'Czech', 'Slovak', 'Hungarian', 'Romanian', 'Bulgarian',
+      'Croatian', 'Serbian', 'Slovenian', 'Bosnian', 'Ukrainian', 'Russian', 'Lithuanian', 'Latvian', 'Estonian',
+      'Greek', 'Turkish', 'Arabic', 'Hebrew', 'Persian', 'Urdu', 'Hindi', 'Bengali', 'Punjabi', 'Gujarati', 'Marathi',
+      'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Thai', 'Vietnamese', 'Indonesian', 'Malay', 'Filipino', 'Javanese',
+      'Korean', 'Japanese', 'Chinese (Simplified)', 'Chinese (Traditional)', 'Mongolian', 'Nepali', 'Sinhala', 'Burmese',
+      'Khmer', 'Lao', 'Georgian', 'Armenian', 'Azerbaijani', 'Kazakh', 'Uzbek', 'Swahili', 'Afrikaans', 'Zulu',
+      'Amharic', 'Somali', 'Hausa', 'Yoruba', 'Igbo', 'Maori', 'Samoan', 'Tongan', 'Hawaiian', 'Latin', 'Esperanto',
+      'Catalan', 'Basque', 'Galician', 'Albanian', 'Macedonian', 'Maltese', 'Welsh', 'Luxembourgish', 'Belarusian',
+      'Aramaic', 'Kurdish', 'Pashto', 'Tajik', 'Turkmen', 'Kyrgyz', 'Fijian', 'Haitian Creole'
+    ];
+
+    const BACKGROUND_PRESETS = [
+      { name: 'Sunset Glow', value: 'linear-gradient(135deg, #ff9a9e 0%, #fad0c4 45%, #f6d365 100%)' },
+      { name: 'Ocean Mist', value: 'linear-gradient(135deg, #89f7fe 0%, #66a6ff 50%, #b3c6ff 100%)' },
+      { name: 'Forest Haze', value: 'linear-gradient(135deg, #d4fc79 0%, #96e6a1 35%, #4facfe 100%)' },
+      { name: 'Lavender Dream', value: 'linear-gradient(135deg, #c2e9fb 0%, #a1c4fd 35%, #d4a5ff 100%)' },
+      { name: 'Pink Sky', value: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 35%, #ff9a9e 100%)' },
+      { name: 'Neon Pulse', value: 'linear-gradient(135deg, #00f5d4 0%, #00bbf9 40%, #9b5de5 100%)' },
+      { name: 'Berry Pop', value: 'linear-gradient(135deg, #ff6b6b 0%, #feca57 30%, #ff9f1c 100%)' },
+      { name: 'Night Bloom', value: 'linear-gradient(135deg, #1d2b64 0%, #7b2cbf 50%, #ff006e 100%)' },
+      { name: 'Citrus Rush', value: 'linear-gradient(135deg, #f6d365 0%, #fda085 40%, #ff5858 100%)' },
+      { name: 'Mint Chill', value: 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 45%, #d4fc79 100%)' },
+      { name: 'Royal Blue', value: 'linear-gradient(135deg, #0f2027 0%, #203a43 35%, #2c5364 100%)' },
+      { name: 'Crimson Fade', value: 'linear-gradient(135deg, #f43f5e 0%, #fb7185 38%, #fda4af 100%)' },
+      { name: 'Aqua Drift', value: 'linear-gradient(135deg, #00dbde 0%, #fc00ff 100%)' },
+      { name: 'Amber Glow', value: 'linear-gradient(135deg, #f6d365 0%, #fda085 52%, #ff5858 100%)' },
+      { name: 'Soft Cloud', value: 'linear-gradient(135deg, #f6f7fb 0%, #dfe9f3 100%)' },
+      { name: 'Voltage Gold', value: 'linear-gradient(135deg, #ffe259 0%, #ffa751 40%, #ff7b54 100%)' },
+      { name: 'Midnight Teal', value: 'linear-gradient(135deg, #0f172a 0%, #134e4a 38%, #14b8a6 100%)' },
+      { name: 'Coral Beat', value: 'linear-gradient(135deg, #ff7f50 0%, #ffb703 40%, #fb8500 100%)' },
+      { name: 'Lilac Light', value: 'linear-gradient(135deg, #f3e7ff 0%, #d9d2ff 40%, #b4c7ff 100%)' },
+      { name: 'RGB Pulse', value: 'linear-gradient(135deg, #ff3d00 0%, #ffeb3b 25%, #00e676 50%, #00bcd4 75%, #8e24aa 100%)' },
+      ...Array.from({ length: 80 }, (_, index) => {
+        const hueA = (index * 13 + 18) % 360;
+        const hueB = (hueA + 36 + (index % 7) * 11) % 360;
+        const hueC = (hueB + 54) % 360;
+        const satA = 68 + (index % 5) * 4;
+        const satB = 72 + (index % 6) * 3;
+        const lightA = 62 + (index % 4) * 4;
+        const lightB = 58 + (index % 5) * 3;
+        return {
+          name: `Spectrum ${index + 1}`,
+          value: `linear-gradient(135deg, hsl(${hueA} ${satA}% ${lightA}%), hsl(${hueB} ${satB}% ${lightB}%), hsl(${hueC} 80% 52%))`
+        };
+      })
+    ];
+
+    const LANGUAGE_CODES = {
+      English: 'en', Spanish: 'es', French: 'fr', German: 'de', Italian: 'it', Portuguese: 'pt', Dutch: 'nl', Swedish: 'sv',
+      Norwegian: 'no', Danish: 'da', Finnish: 'fi', Icelandic: 'is', Irish: 'ga', Welsh: 'cy', Polish: 'pl', Czech: 'cs',
+      Slovak: 'sk', Hungarian: 'hu', Romanian: 'ro', Bulgarian: 'bg', Croatian: 'hr', Serbian: 'sr', Slovenian: 'sl',
+      Bosnian: 'bs', Ukrainian: 'uk', Russian: 'ru', Lithuanian: 'lt', Latvian: 'lv', Estonian: 'et', Greek: 'el', Turkish: 'tr',
+      Arabic: 'ar', Hebrew: 'iw', Persian: 'fa', Urdu: 'ur', Hindi: 'hi', Bengali: 'bn', Punjabi: 'pa', Gujarati: 'gu', Marathi: 'mr',
+      Tamil: 'ta', Telugu: 'te', Kannada: 'kn', Malayalam: 'ml', Thai: 'th', Vietnamese: 'vi', Indonesian: 'id', Malay: 'ms',
+      Filipino: 'tl', Javanese: 'jw', Korean: 'ko', Japanese: 'ja', 'Chinese (Simplified)': 'zh-CN', 'Chinese (Traditional)': 'zh-TW',
+      Mongolian: 'mn', Nepali: 'ne', Sinhala: 'si', Burmese: 'my', Khmer: 'km', Lao: 'lo', Georgian: 'ka', Armenian: 'hy',
+      Azerbaijani: 'az', Kazakh: 'kk', Uzbek: 'uz', Swahili: 'sw', Afrikaans: 'af', Zulu: 'zu', Amharic: 'am', Somali: 'so',
+      Hausa: 'ha', Yoruba: 'yo', Igbo: 'ig', Maori: 'mi', Samoan: 'sm', Tongan: 'to', Hawaiian: 'haw', Latin: 'la', Esperanto: 'eo',
+      Catalan: 'ca', Basque: 'eu', Galician: 'gl', Albanian: 'sq', Macedonian: 'mk', Maltese: 'mt', Luxembourgish: 'lb',
+      Belarusian: 'be', Aramaic: 'ar', Kurdish: 'ku', Pashto: 'ps', Tajik: 'tg', Turkmen: 'tk', Kyrgyz: 'ky', Fijian: 'fj',
+      'Haitian Creole': 'ht'
+    };
+
+    let timeLimit = 60;
+
+    const quoteDisplayEl = document.getElementById('quoteDisplay');
+    const quoteInputEl = document.getElementById('quoteInput');
+    const timerEl = document.getElementById('timer');
+    const wpmEl = document.getElementById('wpm');
+    const accuracyEl = document.getElementById('accuracy');
+    const startBtn = document.getElementById('startBtn');
+    const workspaceEl = document.getElementById('workspace');
+    const passwordDialogEl = document.getElementById('passwordDialog');
+    const passwordInputEl = document.getElementById('passwordInput');
+    const passwordErrorEl = document.getElementById('passwordError');
+    const languageSelectEl = document.getElementById('languageSelect');
+    const backgroundSelectEl = document.getElementById('backgroundSelect');
+    const authDialogEl = document.getElementById('authDialog');
+    const authFormEl = document.getElementById('authForm');
+    const authEmailEl = document.getElementById('authEmail');
+    const authPasswordEl = document.getElementById('authPassword');
+    const authConfirmPasswordEl = document.getElementById('authConfirmPassword');
+    const authErrorEl = document.getElementById('authError');
+    const confirmPasswordFieldEl = document.getElementById('confirmPasswordField');
+    const accountStatusEl = document.getElementById('accountStatus');
+    const loginBtnEl = document.getElementById('loginBtn');
+    const logoutBtnEl = document.getElementById('logoutBtn');
+    const changeNameBtnEl = document.getElementById('changeNameBtn');
+    const deleteAccountBtnEl = document.getElementById('deleteAccountBtn');
+    const nameDialogEl = document.getElementById('nameDialog');
+    const nameFormEl = document.getElementById('nameForm');
+    const displayNameInputEl = document.getElementById('displayNameInput');
+    const nameErrorEl = document.getElementById('nameError');
+    const roleUserInputEl = document.getElementById('roleUserInput');
+    const roleSelectEl = document.getElementById('roleSelect');
+    const roleMessageEl = document.getElementById('roleMessage');
+    const roleAnnouncementEl = document.getElementById('roleAnnouncement');
+    const roleAnnouncementTextEl = document.getElementById('roleAnnouncementText');
+    const resetCaptchaEl = document.getElementById('resetCaptcha');
+    const AUTHORIZED_PASSWORDS = ['duke bestfriend', 'chloe idk', 'terrence cool', 'riyaz owner'];
+    const OWNER_PASSWORD = 'riyaz coder';
+    const PRIVILEGED_ACCOUNT_EMAIL = 'bigfanoe@gmail.com';
+    let passwordMode = 'admin';
+    let resetCaptchaToken = '';
+
+    window.onResetCaptchaSuccess = token => { resetCaptchaToken = token; };
+    window.onResetCaptchaExpired = () => { resetCaptchaToken = ''; };
+
+    LANGUAGES.forEach(language => {
+      const option = document.createElement('option');
+      option.value = language;
+      option.innerText = language;
+      languageSelectEl.appendChild(option);
+    });
+
+    BACKGROUND_PRESETS.forEach((preset, index) => {
+      const option = document.createElement('option');
+      option.value = String(index);
+      option.innerText = preset.name;
+      backgroundSelectEl.appendChild(option);
+    });
+
+    function applyBackground(index) {
+      const backgroundIndex = Math.max(0, Math.min(BACKGROUND_PRESETS.length - 1, Number(index) || 0));
+      const preset = BACKGROUND_PRESETS[backgroundIndex];
+      document.body.style.background = preset.value;
+      document.body.style.backgroundAttachment = 'fixed';
+      document.body.style.backgroundSize = 'cover';
+      document.body.style.transition = 'background 0.35s ease';
+      backgroundSelectEl.value = String(backgroundIndex);
+    }
+
+    backgroundSelectEl.addEventListener('change', event => {
+      applyBackground(event.target.value);
+    });
+
+    applyBackground(0);
+
+    let timeLeft = timeLimit;
+    let timer = null;
+    let isPlaying = false;
+    let totalTypedChars = 0;
+    let correctTypedChars = 0;
+    let previousInputLength = 0;
+    let previousInputCorrect = 0;
+    let isPaused = false;
+    let autoTyperTimer = null;
+    let autoTyperCountdown = null;
+    let translationRequestId = 0;
+    let bestScore = Number(localStorage.getItem('typingBestWpm') || 0);
+    let authMode = 'login';
+    let pausedForGoogleSearch = false;
+
+    async function hashPassword(password) {
+      const bytes = new TextEncoder().encode(password);
+      const hash = await crypto.subtle.digest('SHA-256', bytes);
+      return Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, '0')).join('');
+    }
+
+    function getAccounts() {
+      return JSON.parse(localStorage.getItem('typingAccounts') || '{}');
+    }
+
+    function getDisplayNames() {
+      return JSON.parse(localStorage.getItem('typingDisplayNames') || '{}');
+    }
+
+    function hasNormalPanelAccess() {
+      const email = sessionStorage.getItem('typingCurrentUser');
+      if (!email) return false;
+      if (email === PRIVILEGED_ACCOUNT_EMAIL) return true;
+      const displayName = getDisplayNames()[email] || email.split('@')[0];
+      const roles = JSON.parse(localStorage.getItem('typingRoles') || '{}');
+      const testerAndHigherRoles = new Set(['tester', 'champion', 'admin', 'senior admin', 'co-owner', 'developer', 'coder', 'designer', 'community manager', 'support', 'helper', 'guide', 'mentor', 'teacher', 'researcher', 'writer', 'editor', 'translator', 'event host', 'organizer', 'content creator', 'streamer', 'early supporter', 'founder', 'veteran', 'legend', 'expert', 'pro', 'speed typist', 'accuracy master', 'streak master', 'record holder', 'bug hunter', 'qa lead', 'security reviewer', 'ambassador', 'honorary member']);
+      return testerAndHigherRoles.has(roles[email.toLowerCase()]) || testerAndHigherRoles.has(roles[displayName.toLowerCase()]);
+    }
+
+    function hasOwnerPanelAccess() {
+      const email = sessionStorage.getItem('typingCurrentUser');
+      if (!email) return false;
+      if (email === PRIVILEGED_ACCOUNT_EMAIL) return true;
+      const displayName = getDisplayNames()[email] || email.split('@')[0];
+      const roles = JSON.parse(localStorage.getItem('typingRoles') || '{}');
+      return roles[email.toLowerCase()] === 'honorary member' || roles[displayName.toLowerCase()] === 'honorary member';
+    }
+
+    function updateRoleStatus() {
+      const email = sessionStorage.getItem('typingCurrentUser');
+      const roleValueEl = document.getElementById('currentRoleValue');
+      if (!email) {
+        roleValueEl.innerText = 'User';
+        return;
+      }
+      if (email === PRIVILEGED_ACCOUNT_EMAIL) {
+        roleValueEl.innerText = 'Owner';
+        return;
+      }
+      const displayName = getDisplayNames()[email] || email.split('@')[0];
+      const roles = JSON.parse(localStorage.getItem('typingRoles') || '{}');
+      const role = roles[email.toLowerCase()] || roles[displayName.toLowerCase()] || 'user';
+      roleValueEl.innerText = role.replace(/\b\w/g, character => character.toUpperCase());
+    }
+
+    function updateAccountUI() {
+      const email = sessionStorage.getItem('typingCurrentUser');
+      const displayName = email ? getDisplayNames()[email] || email.split('@')[0] : 'Guest';
+      accountStatusEl.textContent = 'Playing as ';
+      const accountNameEl = document.createElement('strong');
+      accountNameEl.textContent = displayName;
+      accountStatusEl.appendChild(accountNameEl);
+      loginBtnEl.hidden = false;
+      loginBtnEl.innerText = email ? 'Switch account' : 'Log in';
+      changeNameBtnEl.hidden = !email;
+      deleteAccountBtnEl.hidden = !email;
+      logoutBtnEl.hidden = !email;
+      updateRoleStatus();
+      if (email) document.getElementById('playerName').value = displayName;
+    }
+
+    function setAuthMode(mode) {
+      authMode = mode;
+      const isSignup = mode === 'signup';
+      const isForgot = mode === 'forgot';
+      document.getElementById('authTitle').innerText = isSignup ? 'Create account' : isForgot ? 'Reset password' : 'Log in';
+      document.getElementById('authDescription').innerText = isSignup ? 'Create a local account for this typing profile.' : isForgot ? 'Reset the password saved on this device.' : 'Use your account to keep your typing profile on this device.';
+      document.getElementById('authSubmit').innerText = isSignup ? 'Create account' : isForgot ? 'Reset password' : 'Log in';
+      document.getElementById('loginTab').classList.toggle('is-active', !isSignup);
+      document.getElementById('signupTab').classList.toggle('is-active', isSignup);
+      confirmPasswordFieldEl.hidden = !isSignup && !isForgot;
+      authConfirmPasswordEl.required = isSignup || isForgot;
+      document.getElementById('forgotPasswordBtn').hidden = isSignup || isForgot;
+      resetCaptchaEl.hidden = !isForgot;
+      resetCaptchaToken = '';
+      if (window.hcaptcha && window.hcaptcha.reset) window.hcaptcha.reset();
+      authErrorEl.innerText = '';
+      authErrorEl.classList.remove('success');
+    }
+
+    function openAuthDialog(mode = 'login') {
+      setAuthMode(mode);
+      authDialogEl.classList.add('is-visible');
+      authEmailEl.focus();
+    }
+
+    function closeAuthDialog() {
+      authDialogEl.classList.remove('is-visible');
+      authFormEl.reset();
+      authErrorEl.innerText = '';
+    }
+
+    localStorage.removeItem('typingCurrentUser');
+    updateAccountUI();
+
+    document.getElementById('bestWpm').innerText = bestScore;
+
+    function getRandomQuote() {
+      const lengthMode = document.getElementById('wordLengthSelect').value;
+      const words = WORD_BANK.filter(word => {
+        if (lengthMode === 'short') return word.length <= 4;
+        if (lengthMode === 'medium') return word.length >= 5 && word.length <= 7;
+        if (lengthMode === 'long') return word.length >= 8;
+        return true;
+      });
+      const shuffledWords = [...words].sort(() => Math.random() - 0.5);
+      const selectedWords = shuffledWords.slice(0, Math.min(14, shuffledWords.length));
+      return `${selectedWords.join(' ').replace(/^./, character => character.toUpperCase())}.`;
+    }
+
+    async function renderQuote() {
+      const sourceQuote = getRandomQuote();
+      const selectedLanguage = languageSelectEl.value;
+      const requestId = ++translationRequestId;
+      let quote = sourceQuote;
+
+      if (selectedLanguage !== 'English') {
+        quoteDisplayEl.innerText = 'Translating...';
+        try {
+          const languageCode = LANGUAGE_CODES[selectedLanguage] || 'en';
+          const response = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${languageCode}&dt=t&q=${encodeURIComponent(sourceQuote)}`);
+          if (!response.ok) throw new Error('Translation request failed');
+          const translation = await response.json();
+          quote = translation[0].map(part => part[0]).join('');
+        } catch (error) {
+          quote = sourceQuote;
+        }
+      }
+
+      if (requestId !== translationRequestId) return;
+      quoteDisplayEl.innerHTML = '';
+      quote.split('').forEach(char => {
+        const charSpan = document.createElement('span');
+        charSpan.innerText = char;
+        quoteDisplayEl.appendChild(charSpan);
+      });
+      quoteInputEl.value = '';
+      previousInputLength = 0;
+      previousInputCorrect = 0;
+    }
+
+    async function startGame() {
+      isPlaying = true;
+      timeLeft = timeLimit;
+      isPaused = false;
+      totalTypedChars = 0;
+      correctTypedChars = 0;
+      previousInputLength = 0;
+      previousInputCorrect = 0;
+      
+      timerEl.innerText = `${timeLeft}s`;
+      wpmEl.innerText = '0';
+      accuracyEl.innerText = '100%';
+      
+      quoteInputEl.disabled = false;
+      quoteInputEl.focus();
+      startBtn.innerText = 'Restart';
+      document.getElementById('sessionValue').innerText = 'Running';
+      document.getElementById('statusDot').style.background = '#2e9d58';
+      
+      await renderQuote();
+      
+      clearInterval(timer);
+      timer = setInterval(updateTimer, 1000);
+    }
+
+    function updateTimer() {
+      if (isPaused) return;
+      if (timeLeft > 0) {
+        timeLeft--;
+        timerEl.innerText = `${timeLeft}s`;
+        calculateStats();
+      } else {
+        endGame();
+      }
+    }
+
+    function endGame() {
+      clearInterval(timer);
+      stopAutoTyper();
+      isPlaying = false;
+      quoteInputEl.disabled = true;
+      timerEl.innerText = '0s';
+      document.getElementById('sessionValue').innerText = 'Complete';
+      document.getElementById('statusDot').style.background = '#f0ad4e';
+      calculateStats();
+    }
+
+    function calculateStats() {
+      const timeElapsed = timeLimit - timeLeft;
+      if (timeElapsed === 0) return;
+
+      // Standard WPM formula: (Characters Typed / 5) / Time Elapsed in Minutes
+      const wpm = Math.round((correctTypedChars / 5) / (timeElapsed / 60));
+      wpmEl.innerText = isNaN(wpm) || wpm < 0 ? 0 : wpm;
+      if (wpm > bestScore) {
+        bestScore = wpm;
+        localStorage.setItem('typingBestWpm', bestScore);
+        document.getElementById('bestWpm').innerText = bestScore;
+      }
+
+      const accuracy = totalTypedChars > 0 
+        ? Math.round((correctTypedChars / totalTypedChars) * 100) 
+        : 100;
+      accuracyEl.innerText = `${accuracy}%`;
+    }
+
+    quoteInputEl.addEventListener('input', () => {
+      if (!isPlaying || isPaused) return;
+
+      const arrayQuote = quoteDisplayEl.querySelectorAll('span');
+      const arrayValue = quoteInputEl.value.split('');
+      
+      let allCorrect = true;
+      let currentCorrect = 0;
+
+      arrayQuote.forEach((characterSpan, index) => {
+        const character = arrayValue[index];
+        
+        if (character == null) {
+          characterSpan.classList.remove('correct', 'incorrect');
+          allCorrect = false;
+        } else if (character === characterSpan.innerText) {
+          characterSpan.classList.add('correct');
+          characterSpan.classList.remove('incorrect');
+          currentCorrect++;
+        } else {
+          characterSpan.classList.add('incorrect');
+          characterSpan.classList.remove('correct');
+          allCorrect = false;
+        }
+      });
+
+      totalTypedChars += Math.max(0, arrayValue.length - previousInputLength);
+      correctTypedChars += Math.max(0, currentCorrect - previousInputCorrect);
+      previousInputLength = arrayValue.length;
+      previousInputCorrect = currentCorrect;
+
+      // If sentence completed, generate a new prompt without stopping timer
+      if (allCorrect && arrayValue.length === arrayQuote.length && document.getElementById('autoQuoteToggle').checked) {
+        renderQuote();
+      }
+      
+      calculateStats();
+    });
+
+    startBtn.addEventListener('click', startGame);
+
+    document.getElementById('nextWordBtn').addEventListener('click', () => {
+      if (!isPlaying || isPaused) return;
+      // Add a space to skip to the next word
+      quoteInputEl.value += ' ';
+      quoteInputEl.dispatchEvent(new Event('input'));
+    });
+
+    const learningDialogEl = document.getElementById('learningDialog');
+    const learningTitleEl = document.getElementById('learningTitle');
+    const learningSearchInputEl = document.getElementById('learningSearchInput');
+    const learningResultsEl = document.getElementById('learningResults');
+    let learningSubject = 'math';
+
+    const learningTopics = {
+      math: [
+        ['Khan Academy', 'Lessons and practice from arithmetic through calculus.', 'https://www.khanacademy.org/math'], ['Desmos', 'Interactive graphing and classroom tools.', 'https://www.desmos.com/'], ['WolframAlpha', 'Computational answers and step-by-step math help.', 'https://www.wolframalpha.com/'], ['GeoGebra', 'Dynamic geometry, algebra, and graphing tools.', 'https://www.geogebra.org/'], ['NRICH', 'Problem-solving activities from the University of Cambridge.', 'https://nrich.maths.org/'], ['Mathigon', 'Interactive courses and visual mathematical explanations.', 'https://mathigon.org/'], ['Art of Problem Solving', 'Advanced problem-solving lessons and forums.', 'https://artofproblemsolving.com/'], ['Brilliant', 'Interactive courses in math and science.', 'https://brilliant.org/'], ['MIT OpenCourseWare', 'Free university mathematics course materials.', 'https://ocw.mit.edu/search/?d=Mathematics'], ['OpenStax Math', 'Free, peer-reviewed college math textbooks.', 'https://openstax.org/subjects/math'], ['Paul’s Online Math Notes', 'Notes, examples, and practice for college math.', 'https://tutorial.math.lamar.edu/'], ['MathWorld', 'Reference articles from Wolfram Research.', 'https://mathworld.wolfram.com/'], ['Cut-the-Knot', 'Interactive explanations and puzzles.', 'https://www.cut-the-knot.org/'], ['Purplemath', 'Clear algebra lessons and examples.', 'https://www.purplemath.com/'], ['Math is Fun', 'Friendly explanations, activities, and puzzles.', 'https://www.mathsisfun.com/'], ['Illustrative Mathematics', 'Standards-based lessons and tasks.', 'https://illustrativemathematics.org/'], ['YouCubed', 'Visual mathematics tasks and teaching resources.', 'https://www.youcubed.org/'], ['NRICH Primary', 'Accessible primary-school problem solving.', 'https://nrich.maths.org/primary'], ['Mathematics Learning Centre', 'University study guides and practice resources.', 'https://www.adelaide.edu.au/mathslearning/'], ['AMS', 'American Mathematical Society resources and articles.', 'https://www.ams.org/'], ['MAA', 'Mathematical Association of America resources.', 'https://www.maa.org/'], ['IMAGINARY', 'Visual mathematics exhibitions and tools.', 'https://imaginary.org/'], ['Numberphile', 'Video explorations of mathematical ideas.', 'https://www.numberphile.com/'], ['Mathsnet', 'Online mathematics lessons and activities.', 'https://www.mathsnet.com/'], ['CK-12', 'Free adaptive math textbooks and practice.', 'https://www.ck12.org/student/'], ['IXL', 'Practice questions organized by skill.', 'https://www.ixl.com/'], ['Maths Genie', 'Revision lessons and exam practice.', 'https://www.mathsgenie.co.uk/'], ['Sangaku', 'Interactive math problems and solutions.', 'https://www.sangaku.es/'], ['OpenLearn Math', 'Free math courses from The Open University.', 'https://www.open.edu/openlearn/'], ['Mathematics Stack Exchange', 'Community questions and detailed solutions.', 'https://math.stackexchange.com/']
+      ],
+      reading: [
+        ['Open Library', 'Search millions of books and borrow available digital copies.', 'https://openlibrary.org/'], ['Project Gutenberg', 'Free public-domain ebooks in many languages.', 'https://www.gutenberg.org/'], ['Internet Archive Books', 'Borrow and read digitized books and texts.', 'https://archive.org/details/texts'], ['Standard Ebooks', 'Beautifully formatted public-domain ebooks.', 'https://standardebooks.org/'], ['Poetry Foundation', 'Poems, poets, and poetry education.', 'https://www.poetryfoundation.org/'], ['Poets.org', 'Poetry from the Academy of American Poets.', 'https://poets.org/'], ['Library of Congress Books', 'Books, manuscripts, newspapers, and literary collections.', 'https://www.loc.gov/books/'], ['The British Library', 'Literature, manuscripts, and reading collections.', 'https://www.bl.uk/collection-items'], ['Oxford Bibliographies', 'Expert guides to books and scholarship.', 'https://www.oxfordbibliographies.com/'], ['JSTOR', 'Academic articles and books across the humanities.', 'https://www.jstor.org/'], ['Google Books', 'Search and preview books from around the world.', 'https://books.google.com/'], ['HathiTrust', 'Digitized books from research libraries.', 'https://www.hathitrust.org/'], ['ManyBooks', 'Free and discounted ebooks.', 'https://manybooks.net/'], ['Bartleby', 'Classic literature, reference, and study resources.', 'https://www.bartleby.com/'], ['Read Print', 'Online library of classic books.', 'https://www.readprint.com/'], ['LibriVox', 'Free public-domain audiobooks read by volunteers.', 'https://librivox.org/'], ['Lit2Go', 'Free stories and poetry in audio and text.', 'https://etc.usf.edu/lit2go/'], ['CommonLit', 'Reading lessons and texts for learners.', 'https://www.commonlit.org/'], ['ReadTheory', 'Reading comprehension practice.', 'https://readtheory.org/'], ['Newsela', 'Current events and nonfiction reading practice.', 'https://newsela.com/'], ['Purdue OWL', 'Writing, citation, and study guides.', 'https://owl.purdue.edu/'], ['Grammar Girl', 'Practical language and writing advice.', 'https://www.quickanddirtytips.com/grammar-girl'], ['The Paris Review', 'Literary interviews, fiction, and poetry.', 'https://www.theparisreview.org/'], ['The New Yorker Fiction', 'Stories, criticism, and literary writing.', 'https://www.newyorker.com/magazine/fiction'], ['Electric Literature', 'Contemporary literature and criticism.', 'https://electricliterature.com/'], ['The Poetry Archive', 'Poetry recordings and educational resources.', 'https://poetryarchive.org/'], ['Literary Hub', 'Interviews, essays, and book coverage.', 'https://lithub.com/'], ['Book Riot', 'Book recommendations and reading culture.', 'https://bookriot.com/'], ['Goodreads', 'Book discovery, reviews, and reading lists.', 'https://www.goodreads.com/'], ['National Writing Project', 'Writing and literacy resources.', 'https://www.nwp.org/']
+      ],
+      history: [
+        ['Library of Congress', 'Primary sources, photographs, maps, and collections.', 'https://www.loc.gov/'], ['Smithsonian Learning Lab', 'Curated objects and historical learning collections.', 'https://learninglab.si.edu/'], ['National Archives', 'Records and documents from United States history.', 'https://www.archives.gov/'], ['British Museum', 'Objects and stories from world cultures.', 'https://www.britishmuseum.org/collection'], ['The National Archives UK', 'Documents and resources from British history.', 'https://www.nationalarchives.gov.uk/'], ['Europeana', 'European cultural heritage collections.', 'https://www.europeana.eu/'], ['Imperial War Museums', 'Collections and stories about modern conflict.', 'https://www.iwm.org.uk/collections'], ['USHMM', 'Holocaust history and survivor testimony.', 'https://www.ushmm.org/'], ['United Nations History', 'International history and primary documents.', 'https://www.un.org/en/about-us/history-of-the-united-nations'], ['World History Encyclopedia', 'Articles about civilizations, people, and events.', 'https://www.worldhistory.org/'], ['JSTOR Daily', 'Research-informed history and culture articles.', 'https://daily.jstor.org/'], ['Oxford Academic History', 'Scholarly books and articles in history.', 'https://academic.oup.com/journals'], ['Cambridge Core History', 'Academic history books and journals.', 'https://www.cambridge.org/core/what-we-publish/subjects/history'], ['Digital Public Library of America', 'Digitized American historical collections.', 'https://dp.la/'], ['Chronicling America', 'Historic newspapers from the Library of Congress.', 'https://chroniclingamerica.loc.gov/'], ['Colonial Williamsburg', 'Early American history resources.', 'https://www.colonialwilliamsburg.org/learn/'], ['Gilder Lehrman Institute', 'American history documents and lessons.', 'https://www.gilderlehrman.org/'], ['National WWII Museum', 'World War II artifacts and education.', 'https://www.nationalww2museum.org/'], ['Anne Frank House', 'Historical context and primary sources.', 'https://www.annefrank.org/en/'], ['Holocaust Educational Trust', 'Teaching resources on Holocaust history.', 'https://www.het.org.uk/'], ['History Today', 'Articles from a history magazine.', 'https://www.historytoday.com/'], ['The Conversation History', 'Historian-written public scholarship.', 'https://theconversation.com/us/topics/history-26'], ['History Extra', 'History articles, podcasts, and interviews.', 'https://www.historyextra.com/'], ['The British Library', 'Manuscripts, texts, and cultural history.', 'https://www.bl.uk/collection-items'], ['Harvard Map Collection', 'Historical maps and geographic resources.', 'https://library.harvard.edu/collections/harvard-map-collection'], ['Digital History', 'Primary sources and teaching materials.', 'https://www.digitalhistory.uh.edu/'], ['Fordham Internet History Sourcebooks', 'Translated historical primary sources.', 'https://sourcebooks.fordham.edu/'], ['Perseus Digital Library', 'Ancient Greek and Roman texts.', 'https://www.perseus.tufts.edu/'], ['Avalon Project', 'Documents in law, diplomacy, and history.', 'https://avalon.law.yale.edu/'], ['History Learning Site', 'Accessible topic guides and revision material.', 'https://www.historylearningsite.co.uk/']
+      ],
+      humanities: [
+        ['The Metropolitan Museum of Art', 'Explore art, artists, and cultural history.', 'https://www.metmuseum.org/art/collection'], ['Poetry Foundation', 'Poems, poets, and literary background.', 'https://www.poetryfoundation.org/'], ['Stanford Encyclopedia of Philosophy', 'Edited articles about philosophy and ideas.', 'https://plato.stanford.edu/'], ['The Louvre', 'Explore one of the world’s major art collections.', 'https://www.louvre.fr/en/explore'], ['Tate', 'Modern and contemporary art resources.', 'https://www.tate.org.uk/art'], ['MoMA', 'Modern art collection and learning resources.', 'https://www.moma.org/collection/'], ['National Gallery', 'European paintings and art history resources.', 'https://www.nationalgallery.org.uk/paintings'], ['Getty', 'Art, research, conservation, and education.', 'https://www.getty.edu/art/'], ['Google Arts & Culture', 'Digital exhibitions from cultural institutions.', 'https://artsandculture.google.com/'], ['The Art Institute of Chicago', 'Open art collection and essays.', 'https://www.artic.edu/artworks'], ['Smithsonian American Art Museum', 'American art and cultural history.', 'https://americanart.si.edu/art'], ['The British Library', 'Literature, manuscripts, and cultural collections.', 'https://www.bl.uk/collection-items'], ['Project Gutenberg', 'Free public-domain books and literature.', 'https://www.gutenberg.org/'], ['Internet Archive', 'Books, films, music, and historical media.', 'https://archive.org/'], ['Poets.org', 'Poems and resources from the Academy of American Poets.', 'https://poets.org/'], ['Poetry International', 'Poetry from around the world.', 'https://www.poetryinternational.com/'], ['The Paris Review', 'Literary interviews, fiction, and poetry.', 'https://www.theparisreview.org/'], ['The New York Review of Books', 'Essays and reviews about books and ideas.', 'https://www.nybooks.com/'], ['JSTOR', 'Academic humanities articles and books.', 'https://www.jstor.org/'], ['PhilPapers', 'Research and resources in philosophy.', 'https://philpapers.org/'], ['Internet Encyclopedia of Philosophy', 'Introductory philosophy articles.', 'https://iep.utm.edu/'], ['Ethics Unwrapped', 'Free ethics education from the University of Texas.', 'https://ethicsunwrapped.utexas.edu/'], ['Open Yale Courses', 'Free lectures in humanities and social sciences.', 'https://oyc.yale.edu/courses'], ['MIT OpenCourseWare Humanities', 'Free university humanities course materials.', 'https://ocw.mit.edu/search/?d=Humanities'], ['OpenLearn Arts', 'Free arts and humanities courses.', 'https://www.open.edu/openlearn/'], ['The Conversation Culture', 'Expert-written articles about culture and society.', 'https://theconversation.com/us/topics/culture-42'], ['Smithsonian Folklife', 'Culture, traditions, and living heritage.', 'https://folklife.si.edu/'], ['UNESCO Culture', 'Global cultural heritage and policy resources.', 'https://www.unesco.org/en/culture'], ['National Endowment for the Humanities', 'Public humanities projects and resources.', 'https://www.neh.gov/'], ['Library of Congress Digital Collections', 'Primary cultural and literary sources.', 'https://www.loc.gov/collections/']
+      ]
+    };
+
+    function renderLearningCards(cards) {
+      learningResultsEl.innerHTML = cards.map(card => `<article class="learning-card"><h3>${card.title}</h3><p>${card.description}</p><button class="small-btn learning-open-btn" type="button" data-url="${card.url}">Open source</button></article>`).join('');
+      learningResultsEl.querySelectorAll('.learning-open-btn').forEach(button => {
+        button.addEventListener('click', () => { window.location.href = button.dataset.url; });
+      });
+    }
+
+    async function searchReading(query) {
+      learningResultsEl.innerHTML = '<p>Searching reading sources...</p>';
+      const searchTerm = query.trim() || 'reading';
+      const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(searchTerm)}`;
+      const catalogCards = learningTopics.reading || [];
+      const cards = [{ title: `Search Google for "${searchTerm}"`, description: 'Find reading explanations, examples, and trustworthy sources.', url: googleUrl }];
+      cards.push(...catalogCards.filter(([title, description]) => `${title} ${description}`.toLowerCase().includes(searchTerm.toLowerCase())).map(([title, description, url]) => ({ title, description, url })));
+      let explanation = 'An explanation could not be loaded right now. Use Search Google for more information.';
+      try {
+        const explanationController = new AbortController();
+        const explanationTimeoutId = setTimeout(() => explanationController.abort(), 2500);
+        const explanationResponse = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(searchTerm)}`, { signal: explanationController.signal });
+        clearTimeout(explanationTimeoutId);
+        if (explanationResponse.ok) {
+          const explanationData = await explanationResponse.json();
+          const entry = explanationData[0];
+          const explanations = (entry.meanings || []).flatMap(meaning => (meaning.definitions || []).slice(0, 2).map(definition => `${meaning.partOfSpeech}: ${definition.definition}`));
+          if (explanations.length) explanation = explanations.join(' ');
+        }
+      } catch (error) {
+      }
+      cards.splice(1, 0, { title: `Explanation for "${searchTerm}"`, description: explanation, url: googleUrl });
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const booksResponse = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(searchTerm)}&limit=8`, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (booksResponse.ok) {
+          const booksData = await booksResponse.json();
+          (booksData.docs || []).forEach(book => cards.push({ title: book.title, description: `Book by ${(book.author_name || ['Unknown author'])[0]}. Find it in Open Library.`, url: `https://openlibrary.org${book.key || ''}` }));
+        }
+      } catch (error) {
+        // The Google option and curated sources remain available if the catalog is offline.
+      }
+      renderLearningCards(cards);
+      const googleFrame = document.createElement('iframe');
+      googleFrame.className = 'google-results-frame';
+      googleFrame.title = `Google definition search for ${searchTerm}`;
+      googleFrame.src = `https://www.google.com/search?igu=1&q=${encodeURIComponent(`define ${searchTerm}`)}`;
+      learningResultsEl.prepend(googleFrame);
+    }
+
+    function openLearningCenter(subject = 'math', query = '') {
+      learningSubject = subject;
+      learningTitleEl.innerText = `${subject[0].toUpperCase()}${subject.slice(1)} learning`;
+      learningSearchInputEl.value = query;
+      document.querySelectorAll('.learning-tab').forEach(tab => tab.classList.toggle('is-active', tab.dataset.learningSubject === subject));
+      learningDialogEl.classList.add('is-visible');
+      if (subject === 'reading') searchReading(query);
+      else renderLearningCards((learningTopics[subject] || learningTopics.humanities).map(([title, description, url]) => ({ title, description, url })));
+      learningSearchInputEl.focus();
+    }
+
+    document.querySelectorAll('[data-learning-subject]').forEach(button => {
+      button.addEventListener('click', () => openLearningCenter(button.dataset.learningSubject));
+    });
+    document.getElementById('closeLearningBtn').addEventListener('click', () => {
+      learningDialogEl.classList.remove('is-visible');
+      if (pausedForGoogleSearch && isPlaying) {
+        isPaused = false;
+        pausedForGoogleSearch = false;
+        document.getElementById('sessionValue').innerText = 'Running';
+        quoteInputEl.focus();
+      }
+    });
+    document.getElementById('learningSearchBtn').addEventListener('click', () => {
+      if (learningSubject === 'reading') searchReading(learningSearchInputEl.value);
+      else window.location.href = `https://www.google.com/search?q=${encodeURIComponent(learningSearchInputEl.value || learningSubject)}`;
+    });
+    learningSearchInputEl.addEventListener('keydown', event => {
+      if (event.key === 'Enter') document.getElementById('learningSearchBtn').click();
+    });
+
+    document.getElementById('askGoogleBtn').addEventListener('click', () => {
+      // Extract the current word being typed (last word before the last space or entire input)
+      const inputValue = quoteInputEl.value.trim();
+      let currentWord = inputValue;
+      const lastSpaceIndex = inputValue.lastIndexOf(' ');
+      if (lastSpaceIndex !== -1) {
+        currentWord = inputValue.substring(lastSpaceIndex + 1);
+      }
+      
+      if (!currentWord) {
+        alert('Type or select a word first');
+        return;
+      }
+      
+      if (isPlaying && !isPaused) {
+        isPaused = true;
+        pausedForGoogleSearch = true;
+        document.getElementById('sessionValue').innerText = 'Paused';
+      }
+      openLearningCenter('reading', currentWord);
+    });
+
+    document.getElementById('durationSelect').addEventListener('change', event => {
+      timeLimit = Number(event.target.value);
+      document.getElementById('durationValue').innerText = event.target.options[event.target.selectedIndex].text;
+      if (!isPlaying) timerEl.innerText = `${timeLimit}s`;
+    });
+
+    document.getElementById('wpmGoalInput').addEventListener('change', event => {
+      event.target.value = Math.max(1, Math.min(1000, Number(event.target.value) || 40));
+    });
+
+    document.getElementById('autoAccuracyInput').addEventListener('change', event => {
+      event.target.value = Math.max(1, Math.min(100, Number(event.target.value) || 100));
+    });
+
+    document.getElementById('wordLengthSelect').addEventListener('change', () => {
+      renderQuote();
+    });
+
+    languageSelectEl.addEventListener('change', () => {
+      renderQuote();
+    });
+
+    document.getElementById('pauseBtn').addEventListener('click', event => {
+      if (!isPlaying) return;
+      isPaused = !isPaused;
+      event.target.innerText = isPaused ? 'Resume' : 'Pause';
+      document.getElementById('sessionValue').innerText = isPaused ? 'Paused' : 'Running';
+    });
+
+    document.getElementById('newQuoteBtn').addEventListener('click', () => {
+      renderQuote();
+      if (!isPlaying) quoteInputEl.disabled = false;
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      const csv = `Player,WPM,Accuracy,Best WPM\n${document.getElementById('playerName').value || 'Guest'},${wpmEl.innerText},${accuracyEl.innerText},${bestScore}\n`;
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+      link.download = 'typing-results.csv';
+      link.click();
+      URL.revokeObjectURL(link.href);
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      bestScore = 0;
+      localStorage.removeItem('typingBestWpm');
+      document.getElementById('bestWpm').innerText = '0';
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      timeLimit = 60;
+      document.getElementById('durationSelect').value = '60';
+      document.getElementById('durationValue').innerText = '60 seconds';
+      document.getElementById('difficultySelect').value = 'normal';
+      document.getElementById('wpmGoalInput').value = '40';
+      document.getElementById('wordLengthSelect').value = 'any';
+      languageSelectEl.value = 'English';
+      document.getElementById('soundToggle').checked = true;
+      document.getElementById('autoQuoteToggle').checked = true;
+      document.getElementById('autoAccuracyInput').value = '100';
+      stopAutoTyper();
+      document.getElementById('sessionValue').innerText = 'Ready';
+      if (isPlaying) endGame();
+      timerEl.innerText = '60s';
+    });
+
+    function stopAutoTyper() {
+      clearInterval(autoTyperTimer);
+      clearTimeout(autoTyperCountdown);
+      autoTyperTimer = null;
+      autoTyperCountdown = null;
+      document.getElementById('autoTyperToggle').checked = false;
+      document.getElementById('autoTyperStatus').innerText = 'Continuous';
+    }
+
+    document.getElementById('autoTyperToggle').addEventListener('change', async event => {
+      if (!event.target.checked) {
+        stopAutoTyper();
+        return;
+      }
+      if (!isPlaying) await startGame();
+      isPaused = false;
+      let currentText = Array.from(quoteDisplayEl.querySelectorAll('span')).map(span => span.innerText).join('');
+      let characterIndex = 0;
+      const autoAccuracy = () => Math.max(1, Math.min(100, Number(document.getElementById('autoAccuracyInput').value) || 100));
+      document.getElementById('autoTyperStatus').innerText = 'Starting in 3s';
+      autoTyperCountdown = setTimeout(() => {
+        if (!event.target.checked || !isPlaying) return;
+        document.getElementById('autoTyperStatus').innerText = `${autoAccuracy()}% accuracy`;
+        autoTyperTimer = setInterval(() => {
+        if (!isPlaying || isPaused) return;
+        if (characterIndex >= currentText.length) {
+          if (!document.getElementById('autoQuoteToggle').checked) {
+            stopAutoTyper();
+            return;
+          }
+          renderQuote();
+          currentText = Array.from(quoteDisplayEl.querySelectorAll('span')).map(span => span.innerText).join('');
+          characterIndex = 0;
+        }
+        const intendedCharacter = currentText[characterIndex++];
+        const shouldBeCorrect = Math.random() * 100 < autoAccuracy();
+        const typedCharacter = shouldBeCorrect ? intendedCharacter : String.fromCharCode(97 + Math.floor(Math.random() * 26));
+        quoteInputEl.value += typedCharacter;
+        quoteInputEl.dispatchEvent(new Event('input'));
+        }, 45);
+      }, 3000);
+    });
+
+    function closePasswordDialog() {
+      passwordDialogEl.classList.remove('is-visible');
+      passwordInputEl.value = '';
+      passwordErrorEl.innerText = '';
+    }
+
+    function openPasswordDialog(mode) {
+      passwordMode = mode;
+      document.getElementById('passwordTitle').innerText = mode === 'owner' ? 'RIYAZ ONLY' : 'Admin access';
+      document.getElementById('passwordDescription').innerText = mode === 'owner' ? 'Enter the owner password to open the controls.' : 'Enter the admin password to open the controls.';
+      passwordInputEl.placeholder = mode === 'owner' ? 'Owner password' : 'Admin password';
+      passwordInputEl.focus();
+      passwordDialogEl.classList.add('is-visible');
+    }
+
+    loginBtnEl.addEventListener('click', () => openAuthDialog());
+    changeNameBtnEl.addEventListener('click', () => {
+      const email = sessionStorage.getItem('typingCurrentUser');
+      if (!email) return;
+      const names = getDisplayNames();
+      const currentName = names[email] || email.split('@')[0];
+      displayNameInputEl.value = currentName;
+      nameErrorEl.innerText = '';
+      nameDialogEl.classList.add('is-visible');
+      displayNameInputEl.focus();
+    });
+    document.getElementById('cancelName').addEventListener('click', () => nameDialogEl.classList.remove('is-visible'));
+    nameFormEl.addEventListener('submit', event => {
+      event.preventDefault();
+      const email = sessionStorage.getItem('typingCurrentUser');
+      if (!email) return;
+      const names = getDisplayNames();
+      const trimmedName = displayNameInputEl.value.trim();
+      if (!trimmedName || trimmedName.length > 24) {
+        nameErrorEl.innerText = 'Choose a name between 1 and 24 characters.';
+        return;
+      }
+      names[email] = trimmedName;
+      localStorage.setItem('typingDisplayNames', JSON.stringify(names));
+      nameDialogEl.classList.remove('is-visible');
+      updateAccountUI();
+    });
+    document.getElementById('loginTab').addEventListener('click', () => setAuthMode('login'));
+    document.getElementById('signupTab').addEventListener('click', () => setAuthMode('signup'));
+    document.getElementById('forgotPasswordBtn').addEventListener('click', () => setAuthMode('forgot'));
+    document.getElementById('cancelAuth').addEventListener('click', closeAuthDialog);
+    deleteAccountBtnEl.addEventListener('click', () => {
+      const email = sessionStorage.getItem('typingCurrentUser');
+      if (!email || !window.confirm('Are you sure you want to permanently delete this account?')) return;
+      const accounts = getAccounts();
+      const names = getDisplayNames();
+      const roles = JSON.parse(localStorage.getItem('typingRoles') || '{}');
+      delete accounts[email];
+      delete names[email];
+      delete roles[email];
+      localStorage.setItem('typingAccounts', JSON.stringify(accounts));
+      localStorage.setItem('typingDisplayNames', JSON.stringify(names));
+      localStorage.setItem('typingRoles', JSON.stringify(roles));
+      sessionStorage.removeItem('typingCurrentUser');
+      updateAccountUI();
+    });
+    logoutBtnEl.addEventListener('click', () => {
+      sessionStorage.removeItem('typingCurrentUser');
+      updateAccountUI();
+    });
+
+    const ownerPanelEl = document.querySelector('.owner-panel');
+    const minimizeAdminBtnEl = document.getElementById('minimizeAdminBtn');
+
+    function openAdminPanel() {
+      workspaceEl.classList.remove('owner-open');
+      workspaceEl.classList.add('panel-open');
+    }
+
+    function openOwnerPanel() {
+      workspaceEl.classList.remove('panel-open');
+      ownerPanelEl.classList.remove('is-minimized');
+      minimizeAdminBtnEl.innerText = 'Minimize';
+      minimizeAdminBtnEl.setAttribute('aria-label', 'Minimize owner panel');
+      workspaceEl.classList.add('owner-open');
+    }
+
+    function closeAdminPanel() {
+      workspaceEl.classList.remove('panel-open');
+    }
+
+    function closeOwnerPanel() {
+      ownerPanelEl.classList.remove('is-minimized');
+      minimizeAdminBtnEl.innerText = 'Minimize';
+      minimizeAdminBtnEl.setAttribute('aria-label', 'Minimize owner panel');
+      workspaceEl.classList.remove('owner-open');
+    }
+
+    document.getElementById('closeAdminBtn').addEventListener('click', closeAdminPanel);
+    document.getElementById('closeOwnerBtn').addEventListener('click', closeOwnerPanel);
+    minimizeAdminBtnEl.addEventListener('click', () => {
+      const isMinimized = ownerPanelEl.classList.toggle('is-minimized');
+      minimizeAdminBtnEl.innerText = isMinimized ? 'Restore' : 'Minimize';
+      minimizeAdminBtnEl.setAttribute('aria-label', isMinimized ? 'Restore owner panel' : 'Minimize owner panel');
+    });
+
+    document.getElementById('giveRoleBtn').addEventListener('click', () => {
+      const targetName = roleUserInputEl.value.trim().replace(/^user:\s*/i, '');
+      const currentEmail = sessionStorage.getItem('typingCurrentUser') || '';
+      const displayNames = getDisplayNames();
+      roleMessageEl.classList.remove('success');
+      if (!targetName) {
+        roleMessageEl.innerText = 'Enter a player name first.';
+        return;
+      }
+      const signedInDisplayName = currentEmail ? (displayNames[currentEmail] || currentEmail.split('@')[0]) : '';
+      if (targetName.toLowerCase() === currentEmail.toLowerCase() || targetName.toLowerCase() === signedInDisplayName.toLowerCase()) {
+        roleMessageEl.innerText = 'You cannot rank yourself.';
+        return;
+      }
+      const ownerDisplayName = displayNames[PRIVILEGED_ACCOUNT_EMAIL] || PRIVILEGED_ACCOUNT_EMAIL.split('@')[0];
+      if (targetName.toLowerCase() === PRIVILEGED_ACCOUNT_EMAIL || targetName.toLowerCase() === ownerDisplayName.toLowerCase()) {
+        roleMessageEl.innerText = 'Unable to change owners role!';
+        return;
+      }
+      const accounts = getAccounts();
+      const normalizedTarget = targetName.toLowerCase();
+      const targetEmail = Object.keys(accounts).find(accountEmail => {
+        const accountDisplayName = displayNames[accountEmail] || accountEmail.split('@')[0];
+        return accountEmail.toLowerCase() === normalizedTarget || accountDisplayName.toLowerCase() === normalizedTarget;
+      });
+      if (!targetEmail) {
+        roleMessageEl.innerText = 'That player was not found on this device.';
+        return;
+      }
+      const roles = JSON.parse(localStorage.getItem('typingRoles') || '{}');
+      const role = roleSelectEl.value;
+      roles[targetEmail.toLowerCase()] = role;
+      localStorage.setItem('typingRoles', JSON.stringify(roles));
+      roleMessageEl.innerText = `Role ${role} given to ${targetName}.`;
+      roleMessageEl.classList.add('success');
+      if (isPlaying && !isPaused) {
+        isPaused = true;
+        document.getElementById('sessionValue').innerText = 'Paused';
+      }
+      roleAnnouncementTextEl.innerText = `YOU JUST RECEIVED ${role} BY RIYAZ!`;
+      roleAnnouncementEl.classList.add('is-visible');
+      setTimeout(() => roleAnnouncementEl.classList.remove('is-visible'), 4000);
+    });
+
+    authFormEl.addEventListener('submit', async event => {
+      event.preventDefault();
+      authErrorEl.innerText = '';
+      authErrorEl.classList.remove('success');
+      const email = authEmailEl.value.trim().toLowerCase();
+      const password = authPasswordEl.value;
+      const accounts = getAccounts();
+      if (authMode === 'signup') {
+        if (accounts[email]) {
+          authErrorEl.innerText = 'An account with that email already exists.';
+          return;
+        }
+        if (password !== authConfirmPasswordEl.value) {
+          authErrorEl.innerText = 'Passwords do not match.';
+          return;
+        }
+        const passwordHash = await hashPassword(password);
+        if (Object.values(accounts).includes(passwordHash)) {
+          authErrorEl.innerText = 'This password is in use by another account. Sorry!';
+          return;
+        }
+        accounts[email] = passwordHash;
+        localStorage.setItem('typingAccounts', JSON.stringify(accounts));
+        setAuthMode('login');
+        authEmailEl.value = email;
+        authPasswordEl.value = '';
+        authErrorEl.innerText = 'Account created. Log in to continue.';
+        authErrorEl.classList.add('success');
+        authPasswordEl.focus();
+        return;
+      } else if (authMode === 'forgot') {
+        if (email === PRIVILEGED_ACCOUNT_EMAIL) {
+          authErrorEl.innerText = 'This account password cannot be changed.';
+          return;
+        }
+        if (!resetCaptchaToken) {
+          authErrorEl.innerText = 'Complete the hCaptcha check before resetting your password.';
+          return;
+        }
+        if (!accounts[email]) {
+          authErrorEl.innerText = 'No local account was found for that email.';
+          return;
+        }
+        if (password !== authConfirmPasswordEl.value) {
+          authErrorEl.innerText = 'Passwords do not match.';
+          return;
+        }
+        const passwordHash = await hashPassword(password);
+        const otherAccountUsesPassword = Object.entries(accounts).some(([accountEmail, accountPasswordHash]) => accountEmail !== email && accountPasswordHash === passwordHash);
+        if (otherAccountUsesPassword) {
+          authErrorEl.innerText = 'This password is in use by another account. Sorry!';
+          return;
+        }
+        accounts[email] = passwordHash;
+        localStorage.setItem('typingAccounts', JSON.stringify(accounts));
+        setAuthMode('login');
+        authEmailEl.value = email;
+        authPasswordEl.value = '';
+        authErrorEl.innerText = 'Password reset. Log in to continue.';
+        authErrorEl.classList.add('success');
+        resetCaptchaToken = '';
+        if (window.hcaptcha && window.hcaptcha.reset) window.hcaptcha.reset();
+        authPasswordEl.focus();
+        return;
+      } else if (!accounts[email] || accounts[email] !== await hashPassword(password)) {
+        authErrorEl.innerText = 'Incorrect email or password.';
+        return;
+      }
+      sessionStorage.setItem('typingCurrentUser', email);
+      updateAccountUI();
+      closeAuthDialog();
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.key !== '\\' && event.key !== ']') return;
+      event.preventDefault();
+      if (event.key === '\\' && workspaceEl.classList.contains('panel-open')) {
+        closeAdminPanel();
+      } else if (event.key === ']' && workspaceEl.classList.contains('owner-open')) {
+        closeOwnerPanel();
+      } else if (hasOwnerPanelAccess()) {
+        if (event.key === ']') {
+          openOwnerPanel();
+        } else {
+          openAdminPanel();
+        }
+      } else if (hasNormalPanelAccess()) {
+        if (event.key === '\\') openAdminPanel();
+        else openPasswordDialog('owner');
+      } else {
+        openPasswordDialog(event.key === ']' ? 'owner' : 'admin');
+      }
+    });
+
+    document.getElementById('cancelPassword').addEventListener('click', closePasswordDialog);
+    document.getElementById('passwordForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const enteredPassword = passwordInputEl.value.trim().toLowerCase();
+      const isOwnerPassword = enteredPassword === OWNER_PASSWORD;
+      const isAdminPassword = AUTHORIZED_PASSWORDS.includes(enteredPassword);
+      
+      if (passwordMode === 'owner' && isOwnerPassword) {
+        closePasswordDialog();
+        openOwnerPanel();
+      } else if (passwordMode === 'admin' && isAdminPassword) {
+        closePasswordDialog();
+        openAdminPanel();
+      } else {
+        passwordErrorEl.innerText = 'That password is not authorized.';
+        passwordInputEl.select();
+      }
+    });
+
+  </script>
+</body>
+</html>
