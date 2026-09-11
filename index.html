@@ -266,6 +266,8 @@
     .auth-error.success { color: #2e7d32; }
     .name-dialog { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(38, 50, 56, 0.38); z-index: 6; }
     .name-dialog.is-visible { display: flex; }
+    .email-dialog { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(38, 50, 56, 0.38); z-index: 7; }
+    .email-dialog.is-visible { display: flex; }
 
     .admin-heading {
       display: flex;
@@ -487,7 +489,7 @@
     <div class="container">
       <div class="account-bar">
         <div class="account-status" id="accountStatus">Playing as <strong>Guest</strong></div>
-        <div class="account-actions"><button class="small-btn" id="changeNameBtn" type="button" hidden>Change name</button><button class="small-btn delete-account-btn" id="deleteAccountBtn" type="button" hidden>Delete account</button><button class="small-btn" id="loginBtn" type="button">Log in</button><button class="small-btn" id="logoutBtn" type="button" hidden>Log out</button></div>
+        <div class="account-actions"><button class="small-btn" id="changeNameBtn" type="button" hidden>Change name</button><button class="small-btn" id="changeEmailBtn" type="button" hidden>Change email</button><button class="small-btn delete-account-btn" id="deleteAccountBtn" type="button" hidden>Delete account</button><button class="small-btn" id="loginBtn" type="button">Log in</button><button class="small-btn" id="logoutBtn" type="button" hidden>Log out</button></div>
       </div>
       <h1>Speed Typing Test</h1>
       <div class="language-picker"><label for="languageSelect">Language</label><select id="languageSelect"></select></div>
@@ -565,6 +567,16 @@
       <div class="h-captcha" id="resetCaptcha" data-sitekey="e0688442-dce2-421c-81f8-e1a0d66a82d8" data-callback="onResetCaptchaSuccess" data-expired-callback="onResetCaptchaExpired" data-error-callback="onResetCaptchaExpired" hidden></div>
       <div class="auth-error" id="authError" aria-live="polite"></div>
       <div class="password-actions"><button class="small-btn" type="button" id="cancelAuth">Cancel</button><button class="btn" id="authSubmit" type="submit">Log in</button></div>
+    </form>
+  </div>
+
+  <div class="email-dialog" id="emailDialog" role="dialog" aria-modal="true" aria-labelledby="emailTitle">
+    <form class="auth-box" id="emailForm">
+      <h2 id="emailTitle">Change email</h2>
+      <p>Enter the new email address for your Supabase account.</p>
+      <label class="auth-field" for="newEmailInput">New email<input id="newEmailInput" type="email" autocomplete="email" required /></label>
+      <div class="auth-error" id="emailError" aria-live="polite"></div>
+      <div class="password-actions"><button class="small-btn" type="button" id="cancelEmail">Cancel</button><button class="btn" id="changeEmailSubmit" type="submit">Change email</button></div>
     </form>
   </div>
 
@@ -711,7 +723,13 @@
     const loginBtnEl = document.getElementById('loginBtn');
     const logoutBtnEl = document.getElementById('logoutBtn');
     const changeNameBtnEl = document.getElementById('changeNameBtn');
+    const changeEmailBtnEl = document.getElementById('changeEmailBtn');
     const deleteAccountBtnEl = document.getElementById('deleteAccountBtn');
+    const emailDialogEl = document.getElementById('emailDialog');
+    const emailFormEl = document.getElementById('emailForm');
+    const newEmailInputEl = document.getElementById('newEmailInput');
+    const emailErrorEl = document.getElementById('emailError');
+    const changeEmailSubmitEl = document.getElementById('changeEmailSubmit');
     const nameDialogEl = document.getElementById('nameDialog');
     const nameFormEl = document.getElementById('nameForm');
     const displayNameInputEl = document.getElementById('displayNameInput');
@@ -732,7 +750,7 @@
     let passwordMode = 'admin';
     let resetCaptchaToken = '';
 
-    window.onResetCaptchaSuccess = token => { resetCaptchaToken = token; };
+    window.onResetCaptchaSuccess = token => { resetCaptchaToken = typeof token === 'string' ? token : ''; };
     window.onResetCaptchaExpired = () => { resetCaptchaToken = ''; };
 
     LANGUAGES.forEach(language => {
@@ -868,6 +886,7 @@
       loginBtnEl.hidden = false;
       loginBtnEl.innerText = email ? 'Switch account' : 'Log in';
       changeNameBtnEl.hidden = !email;
+      changeEmailBtnEl.hidden = !email;
       deleteAccountBtnEl.hidden = !email;
       logoutBtnEl.hidden = !email;
       updateRoleStatus();
@@ -1330,6 +1349,53 @@
       displayNameInputEl.focus();
     });
     document.getElementById('cancelName').addEventListener('click', () => nameDialogEl.classList.remove('is-visible'));
+
+    changeEmailBtnEl.addEventListener('click', async () => {
+      const { data } = await supabaseClient.auth.getUser();
+      if (!data.user) return;
+      newEmailInputEl.value = data.user.email || '';
+      emailErrorEl.innerText = '';
+      emailErrorEl.classList.remove('success');
+      emailDialogEl.classList.add('is-visible');
+      newEmailInputEl.focus();
+    });
+
+    document.getElementById('cancelEmail').addEventListener('click', () => {
+      emailDialogEl.classList.remove('is-visible');
+      emailFormEl.reset();
+      emailErrorEl.innerText = '';
+    });
+
+    emailFormEl.addEventListener('submit', async event => {
+      event.preventDefault();
+      emailErrorEl.innerText = '';
+      emailErrorEl.classList.remove('success');
+      const newEmail = newEmailInputEl.value.trim().toLowerCase();
+      const { data: userData } = await supabaseClient.auth.getUser();
+      const currentEmail = (userData.user?.email || '').toLowerCase();
+      if (!userData.user) {
+        emailErrorEl.innerText = 'You are not signed in.';
+        return;
+      }
+      if (!newEmail || newEmail === currentEmail) {
+        emailErrorEl.innerText = 'Enter a different email address.';
+        return;
+      }
+
+      changeEmailSubmitEl.disabled = true;
+      changeEmailSubmitEl.innerText = 'Sending...';
+      const { error } = await supabaseClient.auth.updateUser({ email: newEmail });
+      changeEmailSubmitEl.disabled = false;
+      changeEmailSubmitEl.innerText = 'Change email';
+
+      if (error) {
+        emailErrorEl.innerText = error.message;
+        return;
+      }
+
+      emailErrorEl.innerText = 'Confirmation email sent. Confirm the new address to finish changing your email.';
+      emailErrorEl.classList.add('success');
+    });
     nameFormEl.addEventListener('submit', async event => {
       event.preventDefault();
       const email = sessionStorage.getItem('typingCurrentUser');
@@ -1503,7 +1569,10 @@
           authErrorEl.innerText = 'Complete the hCaptcha check before resetting your password.';
           return;
         }
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + window.location.pathname,
+          captchaToken: resetCaptchaToken
+        });
         if (error) {
           authErrorEl.innerText = error.message;
           return;
