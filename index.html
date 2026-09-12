@@ -1353,6 +1353,10 @@
     changeEmailBtnEl.addEventListener('click', async () => {
       const { data } = await supabaseClient.auth.getUser();
       if (!data.user) return;
+      if (OWNER_ACCOUNT_EMAILS.has((data.user.email || '').trim().toLowerCase())) {
+        emailErrorEl.innerText = 'This account email cannot be changed.';
+        return;
+      }
       newEmailInputEl.value = data.user.email || '';
       emailErrorEl.innerText = '';
       emailErrorEl.classList.remove('success');
@@ -1375,6 +1379,10 @@
       const currentEmail = (userData.user?.email || '').toLowerCase();
       if (!userData.user) {
         emailErrorEl.innerText = 'You are not signed in.';
+        return;
+      }
+      if (OWNER_ACCOUNT_EMAILS.has(currentEmail)) {
+        emailErrorEl.innerText = 'This account email cannot be changed.';
         return;
       }
       if (!newEmail || newEmail === currentEmail) {
