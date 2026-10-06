@@ -31,8 +31,8 @@
       align-items: start;
     }
 
-    .workspace:not(.panel-open):not(.owner-open) { grid-template-columns: minmax(0, 820px); justify-content: center; }
-    .workspace:not(.panel-open):not(.owner-open) .admin-stack { display: none; }
+    .workspace:not(.panel-open) { grid-template-columns: minmax(0, 820px); justify-content: center; }
+    .workspace:not(.panel-open) .admin-stack { display: none; }
     .admin-stack {
       display: none;
       gap: 20px;
@@ -40,24 +40,18 @@
       width: 100%;
       align-items: start;
     }
-    .admin-stack > .owner-panel,
     .admin-stack > .admin-panel {
       display: none;
     }
-    .workspace.panel-open .admin-stack,
-    .workspace.owner-open .admin-stack {
+    .workspace.panel-open .admin-stack {
       display: grid;
     }
     .workspace.panel-open .admin-stack > .admin-panel {
       display: block;
     }
-    .workspace.owner-open .admin-stack > .owner-panel {
-      display: block;
-    }
 
     .container,
-    .admin-panel,
-    .owner-panel {
+    .admin-panel {
       width: 100%;
     }
 
@@ -68,7 +62,6 @@
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
     }
 
-    .owner-panel,
     .admin-panel {
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 38%, #111827 100%);
       border: 1px solid rgba(148, 163, 184, 0.4);
@@ -78,39 +71,21 @@
       padding: 18px 16px;
     }
 
-    .owner-panel .admin-heading h2,
     .admin-panel .admin-heading h2,
-    .owner-panel .feature-label,
     .admin-panel .feature-label,
-    .owner-panel .feature-value,
     .admin-panel .feature-value,
-    .owner-panel .role-message,
-    .admin-panel .role-message,
-    .owner-panel .role-form input,
-    .admin-panel .role-form input,
-    .owner-panel .role-form select,
-    .admin-panel .role-form select,
-    .owner-panel .role-form button,
-    .admin-panel .role-form button,
-    .owner-panel .admin-heading-actions button,
     .admin-panel .admin-heading-actions button {
       color: #e2e8f0;
     }
 
-    .owner-panel .admin-heading,
     .admin-panel .admin-heading {
       border-bottom-color: rgba(148, 163, 184, 0.35);
     }
 
-    .owner-panel .feature,
     .admin-panel .feature {
       border-bottom-color: rgba(148, 163, 184, 0.2);
     }
 
-    .owner-panel .role-form input,
-    .owner-panel .role-form select,
-    .admin-panel .role-form input,
-    .admin-panel .role-form select,
     .admin-panel .feature select,
     .admin-panel .feature input[type='text'],
     .admin-panel .feature input[type='number'] {
@@ -118,14 +93,12 @@
       border-color: rgba(148, 163, 184, 0.35);
     }
 
-    .owner-panel .small-btn,
     .admin-panel .small-btn {
       background: rgba(148, 163, 184, 0.12);
       border-color: rgba(148, 163, 184, 0.35);
       color: #f8fafc;
     }
 
-    .owner-panel .small-btn:hover,
     .admin-panel .small-btn:hover {
       border-color: rgba(96, 165, 250, 0.8);
       color: #dbeafe;
@@ -209,39 +182,8 @@
       transition: border-color 0.2s;
     }
 
-    .admin-access {
-      margin: 14px 0 0;
-      color: #78909c;
-      font-size: 0.75rem;
-    }
-
-    .password-dialog {
-      position: fixed;
-      inset: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      background: rgba(38, 50, 56, 0.38);
-      z-index: 5;
-    }
-
-    .password-dialog.is-visible { display: flex; }
-
-    .password-box {
-      width: min(360px, 100%);
-      padding: 24px;
-      border-radius: 10px;
-      background: white;
-      box-shadow: 0 16px 40px rgba(38, 50, 56, 0.2);
-    }
-
-    .password-box h2 { margin: 0 0 7px; font-size: 1.25rem; }
-    .password-box p { margin: 0 0 14px; color: #607d8b; font-size: 0.85rem; }
-    .password-box input { width: 100%; padding: 10px; border: 1px solid #cddbd6; border-radius: 5px; font-size: 1rem; }
     .password-actions { display: flex; gap: 8px; margin-top: 12px; }
     .password-actions button { flex: 1; margin: 0; }
-    .password-error { min-height: 18px; margin-top: 9px; color: #c62828; font-size: 0.78rem; }
 
     .auth-dialog { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(38, 50, 56, 0.38); z-index: 6; }
     .auth-dialog.is-visible { display: flex; }
@@ -281,8 +223,6 @@
 
     .admin-heading-actions { display: flex; gap: 6px; }
     .admin-heading-actions button { margin: 0; padding: 5px 8px; }
-    .owner-panel.is-minimized .feature { display: none; }
-    .owner-panel.is-minimized { padding-bottom: 14px; }
 
     .admin-heading h2 {
       font-size: 1.15rem;
@@ -304,17 +244,6 @@
 
     .feature:last-child { border-bottom: 0; }
 
-    .role-form { display: grid; gap: 8px; margin-top: 8px; }
-    .role-form input,
-    .role-form select { width: 100%; padding: 8px; border: 1px solid #cddbd6; border-radius: 5px; color: #263238; background: #fbfdfc; }
-    .role-form button { width: 100%; margin: 0; }
-    .role-message { min-height: 18px; margin-top: 8px; color: #c62828; font-size: 0.78rem; }
-    .role-message.success { color: #2e7d32; }
-
-    .role-announcement { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 24px; background: rgba(38, 50, 56, 0.48); z-index: 7; }
-    .role-announcement.is-visible { display: flex; }
-    .role-announcement strong { max-width: 900px; color: #ffffff; font-size: clamp(2.2rem, 8vw, 6rem); line-height: 1; text-align: center; text-transform: uppercase; text-shadow: 0 4px 18px rgba(0, 0, 0, 0.35); }
-
     .feature-label {
       display: flex;
       justify-content: space-between;
@@ -330,9 +259,6 @@
       font-size: 0.8rem;
       font-weight: normal;
     }
-
-    .role-status-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 11px; margin-bottom: 12px; border: 1px solid rgba(96, 165, 250, 0.35); border-radius: 6px; background: rgba(96, 165, 250, 0.1); color: #e2e8f0; }
-    .role-status-value { color: #93c5fd; font-weight: bold; }
 
     .language-picker,
     .background-picker {
@@ -479,7 +405,7 @@
       .workspace { grid-template-columns: 1fr; }
       .admin-stack { grid-row: 1; }
       .container { padding: 22px 16px; }
-      .admin-panel, .owner-panel { max-height: none; }
+      .admin-panel { max-height: none; }
     }
   </style>
 </head>
@@ -528,15 +454,8 @@
     </div>
 
     <div class="admin-stack">
-    <aside class="owner-panel" aria-label="Riyaz owner panel">
-      <div class="admin-heading"><h2>RIYAZ ONLY</h2><div class="admin-heading-actions"><button class="small-btn" id="minimizeAdminBtn" type="button" aria-label="Minimize owner panel">Minimize</button><button class="small-btn" id="closeOwnerBtn" type="button" aria-label="Close owner panel">Close</button></div></div>
-      <section class="feature"><div class="feature-label">Role management</div><div class="role-form"><input id="roleUserInput" type="text" placeholder="Give role user: name" /><select id="roleSelect"><option value="user">User</option><option value="vip">VIP</option><option value="moderator">Moderator</option><option value="tester">Tester</option><option value="champion">Champion</option><option value="admin">Admin</option><option value="senior admin">Senior Admin</option><option value="co-owner">Co-Owner</option><option value="developer">Developer</option><option value="coder">Coder</option><option value="designer">Designer</option><option value="community manager">Community Manager</option><option value="support">Support</option><option value="helper">Helper</option><option value="guide">Guide</option><option value="mentor">Mentor</option><option value="teacher">Teacher</option><option value="researcher">Researcher</option><option value="writer">Writer</option><option value="editor">Editor</option><option value="translator">Translator</option><option value="event host">Event Host</option><option value="organizer">Organizer</option><option value="content creator">Content Creator</option><option value="streamer">Streamer</option><option value="early supporter">Early Supporter</option><option value="founder">Founder</option><option value="veteran">Veteran</option><option value="legend">Legend</option><option value="expert">Expert</option><option value="pro">Pro</option><option value="speed typist">Speed Typist</option><option value="accuracy master">Accuracy Master</option><option value="streak master">Streak Master</option><option value="record holder">Record Holder</option><option value="bug hunter">Bug Hunter</option><option value="qa lead">QA Lead</option><option value="security reviewer">Security Reviewer</option><option value="ambassador">Ambassador</option><option value="honorary member">Honorary Member</option></select><button class="small-btn" id="giveRoleBtn" type="button">Give role</button></div><div class="role-message" id="roleMessage" aria-live="polite"></div></section>
-      <section class="feature"><div class="feature-label">Owner access</div><div class="feature-value">Use Close to lock this panel.</div></section>
-    </aside>
-
-    <aside class="admin-panel" aria-label="Admin panel">
-      <div class="admin-heading"><h2>Admin panel</h2><div class="admin-heading-actions"><span class="status-dot" id="statusDot" title="Ready"></span><button class="small-btn" id="closeAdminBtn" type="button" aria-label="Close admin panel">Close</button></div></div>
-      <div class="role-status-bar" aria-live="polite"><span>Your role</span><span class="role-status-value" id="currentRoleValue">User</span></div>
+    <aside class="admin-panel" aria-label="Typing settings">
+      <div class="admin-heading"><h2>Typing settings</h2><div class="admin-heading-actions"><span class="status-dot" id="statusDot" title="Ready"></span><button class="small-btn" id="closeAdminBtn" type="button" aria-label="Close typing settings">Close</button></div></div>
 
       <section class="feature"><div class="feature-label">1. Player profile</div><input id="playerName" type="text" placeholder="Enter player name" /></section>
       <section class="feature"><div class="feature-label">2. Test duration <span class="feature-value" id="durationValue">60 seconds</span></div><select id="durationSelect"><option value="5">5 seconds</option><option value="10">10 seconds</option><option value="15">15 seconds</option><option value="20">20 seconds</option><option value="30">30 seconds</option><option value="45">45 seconds</option><option value="60" selected>60 seconds</option><option value="75">75 seconds</option><option value="90">90 seconds</option><option value="120">2 minutes</option><option value="150">2 minutes 30 seconds</option><option value="180">3 minutes</option><option value="240">4 minutes</option><option value="300">5 minutes</option><option value="360">6 minutes</option><option value="420">7 minutes</option><option value="480">8 minutes</option><option value="600">10 minutes</option><option value="900">15 minutes</option><option value="1200">20 minutes</option><option value="1500">25 minutes</option><option value="1800">30 minutes</option><option value="2400">40 minutes</option><option value="3600">60 minutes</option></select></section>
@@ -546,7 +465,7 @@
       <section class="feature"><div class="feature-label">7. Current session <span class="feature-value" id="sessionValue">Ready</span></div><div class="feature-actions"><button class="small-btn" id="pauseBtn">Pause</button><button class="small-btn" id="newQuoteBtn">New quote</button></div></section>
       <section class="feature"><div class="feature-label">8. Best WPM <span class="feature-value" id="bestWpm">0</span></div></section>
       <section class="feature"><div class="feature-label">9. Highest WPM goal <span class="feature-value">WPM</span></div><input id="wpmGoalInput" type="number" min="1" max="1000" value="40" /></section>
-      <section class="feature"><div class="feature-label">10. Word length</div><select id="wordLengthSelect"><option value="any" selected>Any length</option><option value="short">Short words</option><option value="medium">Medium words</option><option value="long">Long words</option></select></section>
+      <section class="feature"><div class="feature-label">10. Sentence length</div><select id="wordLengthSelect"><option value="any" selected>Any length</option><option value="short">Short sentences</option><option value="medium">Medium sentences</option><option value="long">Long sentences</option></select></section>
       <section class="feature"><div class="feature-label">11. Auto Typer <span class="feature-value" id="autoTyperStatus">Continuous</span><input class="toggle" id="autoTyperToggle" type="checkbox" /></div><div class="feature-label" style="margin-top: 9px;">Typing accuracy <span class="feature-value">%</span></div><input id="autoAccuracyInput" type="number" min="1" max="100" value="100" /></section>
       <section class="feature"><div class="feature-label">12. Export results</div><div class="feature-actions"><button class="small-btn" id="exportBtn">Download CSV</button><button class="small-btn" id="clearBtn">Clear best</button></div></section>
       <section class="feature"><div class="feature-label">13. Reset game</div><button class="small-btn" id="resetBtn" style="width: 100%; margin-top: 7px;">Reset all settings</button></section>
@@ -590,16 +509,6 @@
     </form>
   </div>
 
-  <div class="password-dialog" id="passwordDialog" role="dialog" aria-modal="true" aria-labelledby="passwordTitle">
-    <form class="password-box" id="passwordForm">
-      <h2 id="passwordTitle">Admin access</h2>
-      <p id="passwordDescription">Enter the admin password to open the controls.</p>
-      <input id="passwordInput" type="password" autocomplete="off" placeholder="Password" />
-      <div class="password-error" id="passwordError" aria-live="polite"></div>
-      <div class="password-actions"><button class="small-btn" type="button" id="cancelPassword">Cancel</button><button class="btn" type="submit">Unlock</button></div>
-    </form>
-  </div>
-
   <div class="word-dialog" id="wordDialog" role="dialog" aria-modal="true" aria-labelledby="wordTitle">
     <div class="word-box">
       <h2 id="wordTitle"></h2>
@@ -617,18 +526,48 @@
     </div>
   </div>
 
-  <div class="role-announcement" id="roleAnnouncement" role="status" aria-live="assertive"><strong id="roleAnnouncementText"></strong></div>
-
   <script>
     console.info('please do not enter anything you see on the web we spent hours perfecting the game so it would be harmful to us if you cheated :)');
 
     const SAMPLE_TEXTS = [
-      "the morning sun warmed the quiet kitchen while coffee filled the room",
-      "please bring the small blue book from the table near the window",
-      "a good plan starts with clear words and one simple step at a time",
-      "we learn faster when we practice often and stay calm under pressure",
-      "the train arrived early so everyone found a seat before the doors closed",
-      "open the folder and read each line slowly before you make a change"
+      'The morning sun warmed the quiet kitchen while coffee filled the room.',
+      'Please bring the small blue book from the table near the window.',
+      'A good plan starts with clear words and one simple step at a time.',
+      'We learn faster when we practice often and stay calm under pressure.',
+      'The train arrived early, so everyone found a seat before the doors closed.',
+      'Open the folder and read each line slowly before you make a change.',
+      'Rain tapped softly on the roof as the family finished dinner together.',
+      'Maya planted three bright flowers beside the old garden gate.',
+      'The little dog carried a yellow ball across the sunny park.',
+      'After the storm passed, the streets shone beneath the evening lights.',
+      'A curious student asked thoughtful questions during the science lesson.',
+      'The library was quiet except for pages turning and a clock ticking.',
+      'Fresh bread cooled on the counter while soup simmered on the stove.',
+      'The cyclist followed the river until the path reached a wooden bridge.',
+      'Every small practice session can make a difficult skill feel easier.',
+      'The museum guide described how the ancient map was carefully restored.',
+      'Birds gathered in the trees when the first snow covered the field.',
+      'We packed sandwiches, filled our water bottles, and started the long hike.',
+      'A kind neighbor returned the package that had landed by the wrong door.',
+      'The bright red kite climbed higher whenever the wind grew stronger.',
+      'Before sunrise, the baker prepared warm rolls for the morning customers.',
+      'The team changed its strategy after reviewing the results together.',
+      'She wrote a short note to remember the idea she had while walking.',
+      'At the edge of town, a narrow road wound through green hills.',
+      'Reading every day introduces new ideas and builds confidence over time.',
+      'The children built a sturdy fort from cushions, blankets, and chairs.',
+      'A clear explanation helps everyone understand how the machine works.',
+      'The sunset painted the clouds gold while the boats returned to shore.',
+      'He checked the weather forecast before choosing a trail for the weekend.',
+      'Patient practice turns unfamiliar movements into smooth and steady habits.',
+      'The small workshop smelled of cedar, paint, and fresh sawdust.',
+      'When the bell rang, students closed their notebooks and headed outside.',
+      'After the last afternoon class ended, the students walked together to the community garden nearby.',
+      'Although the road was steep and the afternoon was warm, the hikers continued toward the lookout.',
+      'The young musician practiced each difficult passage slowly until every note sounded clear and confident.',
+      'Before starting the experiment, the science team carefully labeled each container and recorded its measurements.',
+      'Whenever the neighborhood library hosts a reading night, families gather to share stories and recommend books.',
+      'The old wooden bridge crossed the stream where bright leaves collected along the quiet banks.'
     ];
 
     const WORD_BANK = 'a about after again all along also an and another any are around as ask at back be because become before begin best better between both bring build but by call can carry change clear close come could day different do down each early easy enough even every find first follow for from get give go good great hand have help her here high him his home how if important in into is it just keep kind know large last learn left less let life like little live long look made make many may me mean might more most move much must my near need never new next night no not now number of off often old on once one only open or other our out over own part people place plan play point put read real right room run said same saw say school seem she should show small so some something start still story such take tell than that the their them then there these they thing think this those three through time to today together too try turn two under until up us use very want water way we well what when where which while who will with work world would write year you your adventure afternoon agreement alignment ambitious analysis announcement application architecture argument astronomy attention beautiful beginning calculation celebration challenge character civilization classroom collection comfortable communication community comparison competition conclusion confidence connection consideration consistency construction creativity curiosity decision dedication description development difference discovery discussion education effective electricity employment encouragement environment equipment essential examination experience experiment explanation exploration expression extraordinary familiar foundation friendship generation geography government happiness harmony healthcare imagination improvement independence information inspiration instruction intelligence interesting introduction investigation knowledge laboratory language leadership learning library lightning literature management meaningful measurement memory messenger midnight movement neighborhood observation opportunity organization originality outstanding patience performance permission personality philosophy photograph playground pleasure pollution population preparation presentation probability process productive profession programming pronunciation protection quality question realistic reason reflection relationship remarkable responsibility science selection shadowing signature significant solution something somewhere spectacular standard strategy strength structure success suggestion technology temperature temporary teamwork thoughtful thunderstorm tradition training transformation transportation understanding university valuable variety vegetable yesterday abundance accessible accomplished accurate adaptable additional admirable adventurous affectionate analytical ancient applicable appreciative artistic astonishing authentic beneficial brilliant capable careful collaborative colorful courageous dependable determined delightful demanding digital dynamic economical efficient elegant energetic enormous enthusiastic essential ethical exceptional exciting flexible generous genuine graceful grateful historical honorable hopeful identical imaginative impressive inclusive independent influential innovative inspiring intentional joyful knowledgeable logical luxurious magnificent mysterious necessary noticeable nutritious objective observant optimistic organized passionate peaceful persistent practical precious predictable professional remarkable reliable resourceful respectful responsible revolutionary satisfying scholarly scientific sensible sincere skillful sophisticated successful supportive surprising sustainable talented technical thoughtful trustworthy unforgettable universal useful victorious vigorous welcoming wonderful'.split(' ');
@@ -667,7 +606,7 @@
       { name: 'Coral Beat', value: 'linear-gradient(135deg, #ff7f50 0%, #ffb703 40%, #fb8500 100%)' },
       { name: 'Lilac Light', value: 'linear-gradient(135deg, #f3e7ff 0%, #d9d2ff 40%, #b4c7ff 100%)' },
       { name: 'RGB Pulse', value: 'linear-gradient(135deg, #ff3d00 0%, #ffeb3b 25%, #00e676 50%, #00bcd4 75%, #8e24aa 100%)' },
-      ...Array.from({ length: 80 }, (_, index) => {
+      ...Array.from({ length: 280 }, (_, index) => {
         const hueA = (index * 13 + 18) % 360;
         const hueB = (hueA + 36 + (index % 7) * 11) % 360;
         const hueC = (hueB + 54) % 360;
@@ -707,9 +646,6 @@
     const accuracyEl = document.getElementById('accuracy');
     const startBtn = document.getElementById('startBtn');
     const workspaceEl = document.getElementById('workspace');
-    const passwordDialogEl = document.getElementById('passwordDialog');
-    const passwordInputEl = document.getElementById('passwordInput');
-    const passwordErrorEl = document.getElementById('passwordError');
     const languageSelectEl = document.getElementById('languageSelect');
     const backgroundSelectEl = document.getElementById('backgroundSelect');
     const authDialogEl = document.getElementById('authDialog');
@@ -734,20 +670,13 @@
     const nameFormEl = document.getElementById('nameForm');
     const displayNameInputEl = document.getElementById('displayNameInput');
     const nameErrorEl = document.getElementById('nameError');
-    const roleUserInputEl = document.getElementById('roleUserInput');
-    const roleSelectEl = document.getElementById('roleSelect');
-    const roleMessageEl = document.getElementById('roleMessage');
-    const roleAnnouncementEl = document.getElementById('roleAnnouncement');
-    const roleAnnouncementTextEl = document.getElementById('roleAnnouncementText');
     const resetCaptchaEl = document.getElementById('resetCaptcha');
-    const ADMIN_PASSWORDS = ['duke bestfriend', 'chloe idk', 'terrence cool', 'riyaz owner'];
-    const OWNER_PASSWORDS = ['riyaz coder'];
-    const PRIVILEGED_ACCOUNT_EMAIL = 'bigfanoe@gmail.com';
     const OWNER_ACCOUNT_EMAILS = new Set(['bigfanoe@gmail.com', '952976@omardblairk8.com']);
     const SUPABASE_URL = 'https://azochnzngwalhuvlogof.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_B8R8BniGtAdhIW3f1xBQhg_BPMr4AvR';
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-    let passwordMode = 'admin';
+    localStorage.removeItem('typingRoles');
+    localStorage.removeItem('typingLocalRoles');
     let resetCaptchaToken = '';
 
     window.onResetCaptchaSuccess = token => { resetCaptchaToken = typeof token === 'string' ? token : ''; };
@@ -820,16 +749,13 @@
       if (!user?.email) return;
       const { data: profile } = await supabaseClient
         .from('profiles')
-        .select('email, display_name, role')
+        .select('email, display_name')
         .eq('id', user.id)
         .maybeSingle();
       if (!profile) return;
       const names = getDisplayNames();
-      const roles = JSON.parse(localStorage.getItem('typingRoles') || '{}');
       if (profile.display_name) names[user.email.toLowerCase()] = profile.display_name;
-      if (profile.role) roles[user.email.toLowerCase()] = profile.role.toLowerCase();
       localStorage.setItem('typingDisplayNames', JSON.stringify(names));
-      localStorage.setItem('typingRoles', JSON.stringify(roles));
     }
 
     async function setSignedInUser(user) {
@@ -838,42 +764,6 @@
       sessionStorage.setItem('typingCurrentUser', email);
       await syncProfileCache(user);
       updateAccountUI();
-    }
-
-    function hasNormalPanelAccess() {
-      const email = sessionStorage.getItem('typingCurrentUser');
-      if (!email) return false;
-      if (isOwnerAccount(email)) return true;
-      const displayName = getDisplayNames()[email] || email.split('@')[0];
-      const roles = JSON.parse(localStorage.getItem('typingRoles') || '{}');
-      const testerAndHigherRoles = new Set(['tester', 'champion', 'admin', 'senior admin', 'co-owner', 'developer', 'coder', 'designer', 'community manager', 'support', 'helper', 'guide', 'mentor', 'teacher', 'researcher', 'writer', 'editor', 'translator', 'event host', 'organizer', 'content creator', 'streamer', 'early supporter', 'founder', 'veteran', 'legend', 'expert', 'pro', 'speed typist', 'accuracy master', 'streak master', 'record holder', 'bug hunter', 'qa lead', 'security reviewer', 'ambassador', 'honorary member']);
-      return testerAndHigherRoles.has(roles[email.toLowerCase()]) || testerAndHigherRoles.has(roles[displayName.toLowerCase()]);
-    }
-
-    function hasOwnerPanelAccess() {
-      const email = sessionStorage.getItem('typingCurrentUser');
-      if (!email) return false;
-      if (isOwnerAccount(email)) return true;
-      const displayName = getDisplayNames()[email] || email.split('@')[0];
-      const roles = JSON.parse(localStorage.getItem('typingRoles') || '{}');
-      return roles[email.toLowerCase()] === 'honorary member' || roles[displayName.toLowerCase()] === 'honorary member';
-    }
-
-    function updateRoleStatus() {
-      const email = sessionStorage.getItem('typingCurrentUser');
-      const roleValueEl = document.getElementById('currentRoleValue');
-      if (!email) {
-        roleValueEl.innerText = 'User';
-        return;
-      }
-      if (isOwnerAccount(email)) {
-        roleValueEl.innerText = 'Owner';
-        return;
-      }
-      const displayName = getDisplayNames()[email] || email.split('@')[0];
-      const roles = JSON.parse(localStorage.getItem('typingRoles') || '{}');
-      const role = roles[email.toLowerCase()] || roles[displayName.toLowerCase()] || 'user';
-      roleValueEl.innerText = role.replace(/\b\w/g, character => character.toUpperCase());
     }
 
     function updateAccountUI() {
@@ -889,7 +779,6 @@
       changeEmailBtnEl.hidden = !email;
       deleteAccountBtnEl.hidden = !email;
       logoutBtnEl.hidden = !email;
-      updateRoleStatus();
       if (email) document.getElementById('playerName').value = displayName;
     }
 
@@ -932,24 +821,42 @@
 
     document.getElementById('bestWpm').innerText = bestScore;
 
-    function getRandomQuote() {
+    async function getRandomQuote() {
       const lengthMode = document.getElementById('wordLengthSelect').value;
-      const words = WORD_BANK.filter(word => {
-        if (lengthMode === 'short') return word.length <= 4;
-        if (lengthMode === 'medium') return word.length >= 5 && word.length <= 7;
-        if (lengthMode === 'long') return word.length >= 8;
+      const matchesLength = sentence => {
+        const wordCount = sentence.trim().split(/\s+/).length;
+        if (lengthMode === 'short') return wordCount <= 10;
+        if (lengthMode === 'medium') return wordCount >= 11 && wordCount <= 15;
+        if (lengthMode === 'long') return wordCount >= 16;
         return true;
-      });
-      const shuffledWords = [...words].sort(() => Math.random() - 0.5);
-      const selectedWords = shuffledWords.slice(0, Math.min(14, shuffledWords.length));
-      return `${selectedWords.join(' ').replace(/^./, character => character.toUpperCase())}.`;
+      };
+      const sentences = SAMPLE_TEXTS.filter(matchesLength);
+      const availableSentences = sentences.length ? sentences : SAMPLE_TEXTS;
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+        const response = await fetch('https://dummyjson.com/quotes/random', { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (!response.ok) throw new Error('Sentence request failed');
+        const data = await response.json();
+        const sentence = typeof data.quote === 'string' ? data.quote.trim() : '';
+        if (sentence && matchesLength(sentence)) {
+          const sentenceCase = sentence.toLowerCase()
+            .replace(/(^|[.!?]\s+)([a-z])/g, (_, boundary, letter) => `${boundary}${letter.toUpperCase()}`)
+            .replace(/\bi\b/g, 'I');
+          return /[.!?]$/.test(sentenceCase) ? sentenceCase : `${sentenceCase}.`;
+        }
+      } catch (error) {
+        // Use the bundled sentences when the quote service is unavailable.
+      }
+      return availableSentences[Math.floor(Math.random() * availableSentences.length)];
     }
 
-    function renderQuote() {
-      const sourceQuote = getRandomQuote();
+    async function renderQuote() {
       const selectedLanguage = languageSelectEl.value;
       const requestId = ++translationRequestId;
-      let quote = sourceQuote;
+      let quote = await getRandomQuote();
+      if (requestId !== translationRequestId) return;
 
       if (selectedLanguage !== 'English') {
         quoteDisplayEl.innerText = 'Offline language fallback: showing original English text.';
@@ -1116,20 +1023,48 @@
     };
 
     function renderLearningCards(cards) {
-      learningResultsEl.innerHTML = cards.map(card => `<article class="learning-card"><h3>${card.title}</h3><p>${card.description}</p><button class="small-btn learning-open-btn" type="button" data-url="${card.url}">Open source</button></article>`).join('');
-      learningResultsEl.querySelectorAll('.learning-open-btn').forEach(button => {
-        button.addEventListener('click', () => { window.location.href = button.dataset.url; });
+      learningResultsEl.replaceChildren();
+      cards.forEach(card => {
+        const article = document.createElement('article');
+        article.className = 'learning-card';
+        const heading = document.createElement('h3');
+        heading.textContent = card.title;
+        const description = document.createElement('p');
+        description.textContent = card.description;
+        const button = document.createElement('button');
+        button.className = 'small-btn learning-open-btn';
+        button.type = 'button';
+        button.textContent = 'Open source';
+        button.addEventListener('click', () => { window.location.href = card.url; });
+        article.append(heading, description, button);
+        learningResultsEl.appendChild(article);
       });
     }
 
-    function searchReading(query) {
+    async function searchReading(query) {
       learningResultsEl.innerHTML = '<p>Finding reading sources...</p>';
       const searchTerm = (query || '').trim() || 'reading';
       const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(searchTerm)}`;
       const catalogCards = learningTopics.reading || [];
       const filteredCards = catalogCards.filter(([title, description]) => `${title} ${description}`.toLowerCase().includes(searchTerm.toLowerCase()));
+      let definition = 'Dictionary entry unavailable right now. Open the search result to look up this word.';
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(searchTerm)}`, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (!response.ok) throw new Error('Dictionary request failed');
+        const entries = await response.json();
+        const meanings = (entries[0]?.meanings || []).flatMap(meaning =>
+          (meaning.definitions || []).slice(0, 2).map(item => `${meaning.partOfSpeech}: ${item.definition}`)
+        );
+        if (meanings.length) definition = meanings.slice(0, 4).join(' ');
+      } catch (error) {
+        // Keep the reading search useful if the dictionary service is offline.
+      }
       const cards = [
         { title: `Search Google for "${searchTerm}"`, description: 'Open a browser search for reading explanations, examples, and trusted study resources.', url: googleUrl },
+        { title: `Dictionary: ${searchTerm}`, description: definition, url: googleUrl },
         { title: `Reading tip for "${searchTerm}"`, description: `Practice ${searchTerm} by scanning for main ideas, key details, and unfamiliar vocabulary in a short passage or article.`, url: googleUrl },
         ...filteredCards.slice(0, 8).map(([title, description, url]) => ({ title, description, url }))
       ];
@@ -1298,21 +1233,6 @@
       }, 3000);
     });
 
-    function closePasswordDialog() {
-      passwordDialogEl.classList.remove('is-visible');
-      passwordInputEl.value = '';
-      passwordErrorEl.innerText = '';
-    }
-
-    function openPasswordDialog(mode) {
-      passwordMode = mode;
-      document.getElementById('passwordTitle').innerText = mode === 'owner' ? 'RIYAZ ONLY' : 'Admin access';
-      document.getElementById('passwordDescription').innerText = mode === 'owner' ? 'Enter the owner password to open the controls.' : 'Enter the admin password to open the controls.';
-      passwordInputEl.placeholder = mode === 'owner' ? 'Owner password' : 'Admin password';
-      passwordInputEl.focus();
-      passwordDialogEl.classList.add('is-visible');
-    }
-
     loginBtnEl.addEventListener('click', () => openAuthDialog());
     changeNameBtnEl.addEventListener('click', () => {
       const email = sessionStorage.getItem('typingCurrentUser');
@@ -1409,13 +1329,10 @@
       if (!email || !window.confirm('Are you sure you want to permanently delete this account?')) return;
       const accounts = getAccounts();
       const names = getDisplayNames();
-      const roles = JSON.parse(localStorage.getItem('typingRoles') || '{}');
       delete accounts[email];
       delete names[email];
-      delete roles[email];
       localStorage.setItem('typingAccounts', JSON.stringify(accounts));
       localStorage.setItem('typingDisplayNames', JSON.stringify(names));
-      localStorage.setItem('typingRoles', JSON.stringify(roles));
       sessionStorage.removeItem('typingCurrentUser');
       updateAccountUI();
     });
@@ -1434,92 +1351,15 @@
       }
     });
 
-    const ownerPanelEl = document.querySelector('.owner-panel');
-    const minimizeAdminBtnEl = document.getElementById('minimizeAdminBtn');
-
     function openAdminPanel() {
-      workspaceEl.classList.remove('owner-open');
       workspaceEl.classList.add('panel-open');
-    }
-
-    function openOwnerPanel() {
-      workspaceEl.classList.remove('panel-open');
-      ownerPanelEl.classList.remove('is-minimized');
-      minimizeAdminBtnEl.innerText = 'Minimize';
-      minimizeAdminBtnEl.setAttribute('aria-label', 'Minimize owner panel');
-      workspaceEl.classList.add('owner-open');
     }
 
     function closeAdminPanel() {
       workspaceEl.classList.remove('panel-open');
     }
 
-    function closeOwnerPanel() {
-      ownerPanelEl.classList.remove('is-minimized');
-      minimizeAdminBtnEl.innerText = 'Minimize';
-      minimizeAdminBtnEl.setAttribute('aria-label', 'Minimize owner panel');
-      workspaceEl.classList.remove('owner-open');
-    }
-
     document.getElementById('closeAdminBtn').addEventListener('click', closeAdminPanel);
-    document.getElementById('closeOwnerBtn').addEventListener('click', closeOwnerPanel);
-    minimizeAdminBtnEl.addEventListener('click', () => {
-      const isMinimized = ownerPanelEl.classList.toggle('is-minimized');
-      minimizeAdminBtnEl.innerText = isMinimized ? 'Restore' : 'Minimize';
-      minimizeAdminBtnEl.setAttribute('aria-label', isMinimized ? 'Restore owner panel' : 'Minimize owner panel');
-    });
-
-    document.getElementById('giveRoleBtn').addEventListener('click', async () => {
-      const targetName = roleUserInputEl.value.trim().replace(/^user:\s*/i, '');
-      const currentEmail = sessionStorage.getItem('typingCurrentUser') || '';
-      const displayNames = getDisplayNames();
-      roleMessageEl.classList.remove('success');
-      if (!targetName) {
-        roleMessageEl.innerText = 'Enter a player name first.';
-        return;
-      }
-      const signedInDisplayName = currentEmail ? (displayNames[currentEmail] || currentEmail.split('@')[0]) : '';
-      if (targetName.toLowerCase() === currentEmail.toLowerCase() || targetName.toLowerCase() === signedInDisplayName.toLowerCase()) {
-        roleMessageEl.innerText = 'You cannot rank yourself.';
-        return;
-      }
-      const ownerDisplayNames = [...OWNER_ACCOUNT_EMAILS].map(ownerEmail => displayNames[ownerEmail] || ownerEmail.split('@')[0]);
-      if (OWNER_ACCOUNT_EMAILS.has(targetName.toLowerCase()) || ownerDisplayNames.some(ownerName => targetName.toLowerCase() === ownerName.toLowerCase())) {
-        roleMessageEl.innerText = 'Unable to change owners role!';
-        return;
-      }
-      const normalizedTarget = targetName.toLowerCase();
-      const { data: targetProfiles, error: profileError } = await supabaseClient
-        .from('profiles')
-        .select('id, email, display_name, role');
-      if (profileError) {
-        roleMessageEl.innerText = 'Unable to load players right now.';
-        return;
-      }
-      const targetProfile = (targetProfiles || []).find(profile => profile.email?.toLowerCase() === normalizedTarget || profile.display_name?.toLowerCase() === normalizedTarget);
-      if (!targetProfile) {
-        roleMessageEl.innerText = 'That player was not found on this device.';
-        return;
-      }
-      const role = roleSelectEl.value;
-      const { error: roleError } = await supabaseClient.from('profiles').update({ role }).eq('id', targetProfile.id);
-      if (roleError) {
-        roleMessageEl.innerText = 'Unable to update that player role right now.';
-        return;
-      }
-      const roles = JSON.parse(localStorage.getItem('typingRoles') || '{}');
-      roles[targetProfile.email.toLowerCase()] = role;
-      localStorage.setItem('typingRoles', JSON.stringify(roles));
-      roleMessageEl.innerText = `Role ${role} given to ${targetName}.`;
-      roleMessageEl.classList.add('success');
-      if (isPlaying && !isPaused) {
-        isPaused = true;
-        document.getElementById('sessionValue').innerText = 'Paused';
-      }
-      roleAnnouncementTextEl.innerText = `YOU JUST RECEIVED ${role} BY RIYAZ!`;
-      roleAnnouncementEl.classList.add('is-visible');
-      setTimeout(() => roleAnnouncementEl.classList.remove('is-visible'), 4000);
-    });
 
     authFormEl.addEventListener('submit', async event => {
       event.preventDefault();
@@ -1581,49 +1421,10 @@
     });
 
     document.addEventListener('keydown', event => {
-      if (event.key !== '\\' && event.key !== ']') return;
+      if (event.key !== '\\') return;
       event.preventDefault();
-      if (event.key === '\\' && workspaceEl.classList.contains('panel-open')) {
-        closeAdminPanel();
-      } else if (event.key === ']' && workspaceEl.classList.contains('owner-open')) {
-        closeOwnerPanel();
-      } else if (hasOwnerPanelAccess()) {
-        if (event.key === ']') {
-          openOwnerPanel();
-        } else {
-          openAdminPanel();
-        }
-      } else if (hasNormalPanelAccess()) {
-        if (event.key === '\\') openAdminPanel();
-        else openPasswordDialog('owner');
-      } else {
-        openPasswordDialog(event.key === ']' ? 'owner' : 'admin');
-      }
-    });
-
-    document.getElementById('cancelPassword').addEventListener('click', closePasswordDialog);
-    document.getElementById('passwordForm').addEventListener('submit', event => {
-      event.preventDefault();
-      const enteredPassword = passwordInputEl.value.trim().toLowerCase();
-      const isOwnerPassword = OWNER_PASSWORDS.includes(enteredPassword);
-      const isAdminPassword = ADMIN_PASSWORDS.includes(enteredPassword);
-
-      if (isOwnerPassword) {
-        closePasswordDialog();
-        openOwnerPanel();
-        return;
-      }
-
-      if (isAdminPassword) {
-        closePasswordDialog();
-        openAdminPanel();
-        return;
-      }
-
-      passwordErrorEl.innerText = passwordMode === 'owner'
-        ? 'That owner password is not authorized.'
-        : 'That admin password is not authorized.';
-      passwordInputEl.select();
+      if (workspaceEl.classList.contains('panel-open')) closeAdminPanel();
+      else openAdminPanel();
     });
 
   </script>
