@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Speed Typing Game</title>
+  <title>speed typer</title>
   <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -31,8 +31,8 @@
       align-items: start;
     }
 
-    .workspace:not(.panel-open) { grid-template-columns: minmax(0, 820px); justify-content: center; }
-    .workspace:not(.panel-open) .admin-stack { display: none; }
+    .workspace:not(.panel-open):not(.owner-open) { grid-template-columns: minmax(0, 820px); justify-content: center; }
+    .workspace:not(.panel-open):not(.owner-open) .admin-stack { display: none; }
     .admin-stack {
       display: none;
       gap: 20px;
@@ -46,7 +46,13 @@
     .workspace.panel-open .admin-stack {
       display: grid;
     }
-    .workspace.panel-open .admin-stack > .admin-panel {
+    .workspace.panel-open .admin-stack > .admin-panel:not(.owner-panel) {
+      display: block;
+    }
+    .workspace.owner-open .admin-stack {
+      display: grid;
+    }
+    .workspace.owner-open .admin-stack > .owner-panel {
       display: block;
     }
 
@@ -86,12 +92,34 @@
       border-bottom-color: rgba(148, 163, 184, 0.2);
     }
 
+    .profile-role-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 11px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(96, 165, 250, 0.35);
+      border-radius: 6px;
+      background: rgba(96, 165, 250, 0.1);
+      color: #e2e8f0;
+      text-align: left;
+    }
+    .profile-role-indicator strong { color: #93c5fd; }
+
     .admin-panel .feature select,
     .admin-panel .feature input[type='text'],
     .admin-panel .feature input[type='number'] {
       background: rgba(15, 23, 42, 0.7);
       border-color: rgba(148, 163, 184, 0.35);
     }
+
+    .role-form { display: grid; gap: 8px; margin-top: 8px; }
+    .role-form input,
+    .role-form select { width: 100%; padding: 8px; border: 1px solid rgba(148, 163, 184, 0.35); border-radius: 5px; color: #e2e8f0; background: rgba(15, 23, 42, 0.7); }
+    .role-form button { width: 100%; margin: 0; }
+    .role-message { min-height: 18px; margin-top: 8px; color: #fca5a5; font-size: 0.78rem; }
+    .role-message.success { color: #86efac; }
 
     .admin-panel .small-btn {
       background: rgba(148, 163, 184, 0.12);
@@ -185,13 +213,36 @@
     .password-actions { display: flex; gap: 8px; margin-top: 12px; }
     .password-actions button { flex: 1; margin: 0; }
 
+    .panel-password-dialog { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 23, 42, 0.58); z-index: 9; }
+    .panel-password-dialog.is-visible { display: flex; }
+    .panel-password-box { width: min(360px, 100%); padding: 24px; border-radius: 10px; background: #ffffff; box-shadow: 0 16px 40px rgba(15, 23, 42, 0.3); }
+    .panel-password-box h2 { margin: 0 0 7px; font-size: 1.25rem; color: #263238; }
+    .panel-password-box p { margin: 0 0 14px; color: #607d8b; font-size: 0.85rem; }
+    .panel-password-box input { width: 100%; padding: 10px; border: 1px solid #cddbd6; border-radius: 5px; font-size: 1rem; }
+    .panel-password-error { min-height: 18px; margin-top: 9px; color: #c62828; font-size: 0.78rem; }
+    .device-check { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 23, 42, 0.82); z-index: 20; }
+    .device-check-message { width: min(440px, 100%); padding: 28px; border-radius: 12px; background: #ffffff; color: #263238; text-align: center; box-shadow: 0 16px 40px rgba(15, 23, 42, 0.35); }
+    .device-check-message h2 { margin: 0 0 10px; }
+    .device-check-message p { margin: 0; color: #607d8b; line-height: 1.5; }
+
     .auth-dialog { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(38, 50, 56, 0.38); z-index: 6; }
     .auth-dialog.is-visible { display: flex; }
     .auth-box { width: min(390px, 100%); padding: 24px; border-radius: 10px; background: white; box-shadow: 0 16px 40px rgba(38, 50, 56, 0.2); }
     .auth-box h2 { margin: 0 0 7px; font-size: 1.25rem; }
     .auth-box p { margin: 0 0 16px; color: #607d8b; font-size: 0.85rem; }
     .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 14px; }
-    .auth-forgot { display: block; margin: 12px 0 0 auto; padding: 0; border: 0; color: #2474a8; background: transparent; cursor: pointer; font-size: 0.78rem; }
+    .workspace.owner-open .admin-stack > .admin-panel:not(.owner-panel) {
+      display: none;
+    }
+    .auth-forgot {
+      margin: 12px 0 0 auto;
+      padding: 0;
+      border: 0;
+      color: #2474a8;
+      background: transparent;
+      cursor: pointer;
+      font-size: 0.78rem;
+    }
     .auth-tab.is-active { color: white; background: #3498db; border-color: #3498db; }
 
     .word-dialog { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(38, 50, 56, 0.38); z-index: 6; }
@@ -456,6 +507,7 @@
     <div class="admin-stack">
     <aside class="admin-panel" aria-label="Typing settings">
       <div class="admin-heading"><h2>Typing settings</h2><div class="admin-heading-actions"><span class="status-dot" id="statusDot" title="Ready"></span><button class="small-btn" id="closeAdminBtn" type="button" aria-label="Close typing settings">Close</button></div></div>
+      <div class="profile-role-indicator" aria-live="polite"><span>Your exact role</span><strong id="exactRoleValue">User</strong></div>
 
       <section class="feature"><div class="feature-label">1. Player profile</div><input id="playerName" type="text" placeholder="Enter player name" /></section>
       <section class="feature"><div class="feature-label">2. Test duration <span class="feature-value" id="durationValue">60 seconds</span></div><select id="durationSelect"><option value="5">5 seconds</option><option value="10">10 seconds</option><option value="15">15 seconds</option><option value="20">20 seconds</option><option value="30">30 seconds</option><option value="45">45 seconds</option><option value="60" selected>60 seconds</option><option value="75">75 seconds</option><option value="90">90 seconds</option><option value="120">2 minutes</option><option value="150">2 minutes 30 seconds</option><option value="180">3 minutes</option><option value="240">4 minutes</option><option value="300">5 minutes</option><option value="360">6 minutes</option><option value="420">7 minutes</option><option value="480">8 minutes</option><option value="600">10 minutes</option><option value="900">15 minutes</option><option value="1200">20 minutes</option><option value="1500">25 minutes</option><option value="1800">30 minutes</option><option value="2400">40 minutes</option><option value="3600">60 minutes</option></select></section>
@@ -471,8 +523,40 @@
       <section class="feature"><div class="feature-label">13. Reset game</div><button class="small-btn" id="resetBtn" style="width: 100%; margin-top: 7px;">Reset all settings</button></section>
       <section class="feature"><div class="feature-label">14. Learning center</div><div class="learning-actions"><button class="small-btn" type="button" data-learning-subject="math">Math</button><button class="small-btn" type="button" data-learning-subject="reading">Reading</button><button class="small-btn" type="button" data-learning-subject="history">History</button><button class="small-btn" type="button" data-learning-subject="humanities">Humanities</button></div></section>
     </aside>
+    <aside class="admin-panel owner-panel" aria-label="Owner role management">
+      <div class="admin-heading"><h2>Owner role management</h2><div class="admin-heading-actions"><button class="small-btn" id="closeOwnerBtn" type="button" aria-label="Close owner panel">Close</button></div></div>
+      <section class="feature">
+        <div class="feature-label">Give a role</div>
+        <div class="role-form">
+          <input id="roleUserInput" type="text" placeholder="Player name or email" autocomplete="off" />
+          <select id="roleSelect">
+            <option value="user">User</option><option value="vip">VIP</option><option value="moderator">Moderator</option><option value="tester">Tester</option><option value="champion">Champion</option><option value="admin">Admin</option><option value="senior admin">Senior Admin</option><option value="co-owner">Co-Owner</option><option value="developer">Developer</option><option value="coder">Coder</option><option value="designer">Designer</option><option value="community manager">Community Manager</option><option value="support">Support</option><option value="helper">Helper</option><option value="guide">Guide</option><option value="mentor">Mentor</option><option value="teacher">Teacher</option><option value="researcher">Researcher</option><option value="writer">Writer</option><option value="editor">Editor</option><option value="translator">Translator</option><option value="event host">Event Host</option><option value="organizer">Organizer</option><option value="content creator">Content Creator</option><option value="streamer">Streamer</option><option value="early supporter">Early Supporter</option><option value="founder">Founder</option><option value="veteran">Veteran</option><option value="legend">Legend</option><option value="expert">Expert</option><option value="pro">Pro</option><option value="speed typist">Speed Typist</option><option value="accuracy master">Accuracy Master</option><option value="streak master">Streak Master</option><option value="record holder">Record Holder</option><option value="bug hunter">Bug Hunter</option><option value="qa lead">QA Lead</option><option value="security reviewer">Security Reviewer</option><option value="ambassador">Ambassador</option><option value="honorary member">Honorary Member</option>
+          </select>
+          <button class="small-btn" id="giveRoleBtn" type="button">Give role</button>
+        </div>
+        <div class="role-message" id="roleMessage" role="status" aria-live="polite"></div>
+      </section>
+      <section class="feature"><div class="feature-value">Role changes are authorized by Supabase, not this page.</div></section>
+    </aside>
     </div>
   </main>
+
+  <div class="panel-password-dialog" id="panelPasswordDialog" role="dialog" aria-modal="true" aria-labelledby="panelPasswordTitle">
+    <form class="panel-password-box" id="panelPasswordForm">
+      <h2 id="panelPasswordTitle">Enter password</h2>
+      <p id="panelPasswordDescription">Enter password to open the panel.</p>
+      <input id="panelPasswordInput" type="password" autocomplete="current-password" placeholder="Enter password" required />
+      <div class="panel-password-error" id="panelPasswordError" role="status" aria-live="polite"></div>
+      <div class="password-actions"><button class="small-btn" type="button" id="cancelPanelPassword">Cancel</button><button class="btn" type="submit">Unlock</button></div>
+    </form>
+  </div>
+
+  <div class="device-check" id="deviceCheck" role="status" aria-live="polite">
+    <div class="device-check-message">
+      <h2>Press C</h2>
+      <p>Press the C key within five seconds or you will be redirected to a blank page.</p>
+    </div>
+  </div>
 
   <div class="auth-dialog" id="authDialog" role="dialog" aria-modal="true" aria-labelledby="authTitle">
     <form class="auth-box" id="authForm">
@@ -646,6 +730,7 @@
     const accuracyEl = document.getElementById('accuracy');
     const startBtn = document.getElementById('startBtn');
     const workspaceEl = document.getElementById('workspace');
+    const exactRoleValueEl = document.getElementById('exactRoleValue');
     const languageSelectEl = document.getElementById('languageSelect');
     const backgroundSelectEl = document.getElementById('backgroundSelect');
     const authDialogEl = document.getElementById('authDialog');
@@ -670,7 +755,40 @@
     const nameFormEl = document.getElementById('nameForm');
     const displayNameInputEl = document.getElementById('displayNameInput');
     const nameErrorEl = document.getElementById('nameError');
+    const roleUserInputEl = document.getElementById('roleUserInput');
+    const roleSelectEl = document.getElementById('roleSelect');
+    const roleMessageEl = document.getElementById('roleMessage');
+    const panelPasswordDialogEl = document.getElementById('panelPasswordDialog');
+    const panelPasswordFormEl = document.getElementById('panelPasswordForm');
+    const panelPasswordInputEl = document.getElementById('panelPasswordInput');
+    const panelPasswordErrorEl = document.getElementById('panelPasswordError');
     const resetCaptchaEl = document.getElementById('resetCaptcha');
+    const ADMIN_PANEL_PASSWORD_HASHES = new Set([
+      '8a4c61a7e858b2314b256af6a63dd2d797dcb942e0ee25428ac36e370892424d',
+      '5cb4210bd5d31c150b5fe4a61e62741c8faa85dbba32b4e38e248ffe8eabf087',
+      '279e4648e733730aaf159683402ad840e2fd87abe813495a7362e5ed941597ab',
+      '45621645cf274e578a7c2ab3031675a5c41f2b5af8f8c52280f83cf973b947bc',
+      'fnv1a-d5f4a3f4',
+      'fnv1a-ce80ffb8',
+      'fnv1a-81909142',
+      'fnv1a-eebeb4af'
+    ]);
+    const OWNER_PANEL_PASSWORD_HASHES = new Set([
+      'aa6620231529b5bcb4e9f0d0ce117588a98e3f2938c4104298f584dbd47d0d8c',
+      'fnv1a-c9a3dedd'
+    ]);
+    const NORMAL_PANEL_ROLES = new Set([
+      'admin', 'senior admin', 'co-owner', 'developer', 'coder', 'designer',
+      'community manager', 'support', 'helper', 'guide', 'mentor', 'teacher',
+      'researcher', 'writer', 'editor', 'translator', 'event host', 'organizer',
+      'content creator', 'streamer', 'early supporter', 'founder', 'veteran',
+      'legend', 'expert', 'pro', 'speed typist', 'accuracy master', 'streak master',
+      'record holder', 'bug hunter', 'qa lead', 'security reviewer', 'ambassador',
+      'honorary member'
+    ]);
+    let panelPasswordMode = 'admin';
+    let authenticatedUserEmail = '';
+    let currentProfileRole = 'user';
     const OWNER_ACCOUNT_EMAILS = new Set(['bigfanoe@gmail.com', '952976@omardblairk8.com']);
     const SUPABASE_URL = 'https://azochnzngwalhuvlogof.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_B8R8BniGtAdhIW3f1xBQhg_BPMr4AvR';
@@ -728,6 +846,14 @@
     let pausedForGoogleSearch = false;
 
     async function hashPassword(password) {
+      if (!crypto.subtle) {
+        let hash = 0x811c9dc5;
+        for (const byte of new TextEncoder().encode(password)) {
+          hash ^= byte;
+          hash = Math.imul(hash, 0x01000193) >>> 0;
+        }
+        return `fnv1a-${hash.toString(16).padStart(8, '0')}`;
+      }
       const bytes = new TextEncoder().encode(password);
       const hash = await crypto.subtle.digest('SHA-256', bytes);
       return Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, '0')).join('');
@@ -746,13 +872,19 @@
     }
 
     async function syncProfileCache(user) {
+      currentProfileRole = 'user';
       if (!user?.email) return;
-      const { data: profile } = await supabaseClient
+      const { data: profile, error } = await supabaseClient
         .from('profiles')
-        .select('email, display_name')
+        .select('email, display_name, role')
         .eq('id', user.id)
         .maybeSingle();
+      if (error) {
+        console.error('Unable to load signed-in profile:', error);
+        return;
+      }
       if (!profile) return;
+      currentProfileRole = typeof profile.role === 'string' ? profile.role.trim().toLowerCase() : 'user';
       const names = getDisplayNames();
       if (profile.display_name) names[user.email.toLowerCase()] = profile.display_name;
       localStorage.setItem('typingDisplayNames', JSON.stringify(names));
@@ -761,13 +893,24 @@
     async function setSignedInUser(user) {
       if (!user?.email) return;
       const email = user.email.toLowerCase();
+      authenticatedUserEmail = email;
       sessionStorage.setItem('typingCurrentUser', email);
       await syncProfileCache(user);
       updateAccountUI();
     }
 
+    function hasNormalPanelAccess() {
+      return isOwnerAccount(authenticatedUserEmail) || NORMAL_PANEL_ROLES.has(currentProfileRole);
+    }
+
+    function hasOwnerPanelAccess() {
+      return isOwnerAccount(authenticatedUserEmail) || currentProfileRole === 'honorary member';
+    }
+
     function updateAccountUI() {
       const email = sessionStorage.getItem('typingCurrentUser');
+      const exactRole = isOwnerAccount(email) ? 'Owner' : currentProfileRole;
+      exactRoleValueEl.textContent = exactRole.replace(/\b\w/g, character => character.toUpperCase());
       const displayName = email ? getDisplayNames()[email] || email.split('@')[0] : 'Guest';
       accountStatusEl.textContent = 'Playing as ';
       const accountNameEl = document.createElement('strong');
@@ -1346,6 +1489,8 @@
     supabaseClient.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) await setSignedInUser(session.user);
       else {
+        authenticatedUserEmail = '';
+        currentProfileRole = 'user';
         sessionStorage.removeItem('typingCurrentUser');
         updateAccountUI();
       }
@@ -1360,6 +1505,109 @@
     }
 
     document.getElementById('closeAdminBtn').addEventListener('click', closeAdminPanel);
+
+    function openOwnerPanel() {
+      workspaceEl.classList.remove('panel-open');
+      workspaceEl.classList.add('owner-open');
+    }
+    function closeOwnerPanel() {
+      workspaceEl.classList.remove('owner-open');
+    }
+    document.getElementById('closeOwnerBtn').addEventListener('click', closeOwnerPanel);
+
+    function openPanelPasswordDialog(mode) {
+      panelPasswordMode = mode;
+      const panelName = mode === 'owner' ? 'owner role panel' : 'typing settings';
+      document.getElementById('panelPasswordTitle').innerText = 'Enter password';
+      document.getElementById('panelPasswordDescription').innerText = `Enter password to open ${panelName}.`;
+      panelPasswordInputEl.value = '';
+      panelPasswordErrorEl.innerText = '';
+      panelPasswordDialogEl.classList.add('is-visible');
+      panelPasswordInputEl.focus();
+    }
+
+    function closePanelPasswordDialog() {
+      panelPasswordDialogEl.classList.remove('is-visible');
+      panelPasswordInputEl.value = '';
+      panelPasswordErrorEl.innerText = '';
+    }
+
+    document.getElementById('cancelPanelPassword').addEventListener('click', closePanelPasswordDialog);
+    panelPasswordFormEl.addEventListener('submit', async event => {
+      event.preventDefault();
+      panelPasswordErrorEl.innerText = '';
+      let passwordHash;
+      try {
+        passwordHash = await hashPassword(panelPasswordInputEl.value.trim().toLowerCase());
+      } catch (error) {
+        console.error('Unable to verify panel password:', error);
+        panelPasswordErrorEl.innerText = 'Unable to verify the password in this browser.';
+        return;
+      }
+
+      const allowedHashes = panelPasswordMode === 'owner'
+        ? OWNER_PANEL_PASSWORD_HASHES
+        : ADMIN_PANEL_PASSWORD_HASHES;
+      if (!allowedHashes.has(passwordHash)) {
+        panelPasswordErrorEl.innerText = 'Incorrect password.';
+        panelPasswordInputEl.select();
+        return;
+      }
+
+      const mode = panelPasswordMode;
+      closePanelPasswordDialog();
+      if (mode === 'owner') openOwnerPanel();
+      else openAdminPanel();
+    });
+
+    document.getElementById('giveRoleBtn').addEventListener('click', async () => {
+      const targetName = roleUserInputEl.value.trim().replace(/^user:\s*/i, '');
+      roleMessageEl.classList.remove('success');
+      if (!targetName) {
+        roleMessageEl.innerText = 'Enter a player name or email first.';
+        return;
+      }
+
+      const normalizedTarget = targetName.toLowerCase();
+      const { data: targetProfiles, error: profileError } = await supabaseClient
+        .from('profiles')
+        .select('id, email, display_name');
+      if (profileError) {
+        roleMessageEl.innerText = 'Unable to look up players. Check the Supabase profiles read policy.';
+        return;
+      }
+      const matches = (targetProfiles || []).filter(profile =>
+        profile.email?.toLowerCase() === normalizedTarget ||
+        profile.display_name?.toLowerCase() === normalizedTarget
+      );
+      if (!matches.length) {
+        roleMessageEl.innerText = 'No matching player profile was found.';
+        return;
+      }
+      if (matches.length > 1) {
+        roleMessageEl.innerText = 'More than one player has that name. Enter their email instead.';
+        return;
+      }
+
+      const { error: roleError } = await supabaseClient.rpc('grant_profile_role', {
+        p_target_user_id: matches[0].id,
+        p_role: roleSelectEl.value
+      });
+      if (roleError) {
+        console.error('Role grant failed:', roleError);
+        if (roleError.code === '42501') {
+          roleMessageEl.innerText = 'Your account is not authorized to grant roles.';
+        } else if (roleError.code === 'PGRST202' || roleError.code === '42883') {
+          roleMessageEl.innerText = 'Role grants are not enabled yet. Apply the secure role-grant SQL migration in Supabase.';
+        } else {
+          roleMessageEl.innerText = 'Unable to grant that role. Check the browser console for the Supabase error.';
+        }
+        return;
+      }
+
+      roleMessageEl.innerText = `Role ${roleSelectEl.value} given to ${matches[0].display_name || matches[0].email}.`;
+      roleMessageEl.classList.add('success');
+    });
 
     authFormEl.addEventListener('submit', async event => {
       event.preventDefault();
@@ -1420,11 +1668,36 @@
       closeAuthDialog();
     });
 
+    const deviceCheckEl = document.getElementById('deviceCheck');
+    let deviceCheckComplete = false;
+    const deviceCheckTimer = setTimeout(() => {
+      if (deviceCheckComplete) return;
+      deviceCheckComplete = true;
+      window.location.replace('about:blank');
+    }, 5000);
+
     document.addEventListener('keydown', event => {
-      if (event.key !== '\\') return;
+      if (!deviceCheckComplete) {
+        event.preventDefault();
+        if (event.key.toLowerCase() !== 'c') return;
+        deviceCheckComplete = true;
+        clearTimeout(deviceCheckTimer);
+        deviceCheckEl.remove();
+        return;
+      }
+      if (event.key !== '\\' && event.key !== ']') return;
       event.preventDefault();
-      if (workspaceEl.classList.contains('panel-open')) closeAdminPanel();
-      else openAdminPanel();
+      if (event.key === '\\') {
+        if (workspaceEl.classList.contains('panel-open')) closeAdminPanel();
+        else if (hasNormalPanelAccess()) openAdminPanel();
+        else openPanelPasswordDialog('admin');
+      } else if (workspaceEl.classList.contains('owner-open')) {
+        closeOwnerPanel();
+      } else if (hasOwnerPanelAccess()) {
+        openOwnerPanel();
+      } else {
+        openPanelPasswordDialog('owner');
+      }
     });
 
   </script>
