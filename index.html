@@ -213,13 +213,6 @@
     .password-actions { display: flex; gap: 8px; margin-top: 12px; }
     .password-actions button { flex: 1; margin: 0; }
 
-    .panel-password-dialog { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 23, 42, 0.58); z-index: 9; }
-    .panel-password-dialog.is-visible { display: flex; }
-    .panel-password-box { width: min(360px, 100%); padding: 24px; border-radius: 10px; background: #ffffff; box-shadow: 0 16px 40px rgba(15, 23, 42, 0.3); }
-    .panel-password-box h2 { margin: 0 0 7px; font-size: 1.25rem; color: #263238; }
-    .panel-password-box p { margin: 0 0 14px; color: #607d8b; font-size: 0.85rem; }
-    .panel-password-box input { width: 100%; padding: 10px; border: 1px solid #cddbd6; border-radius: 5px; font-size: 1rem; }
-    .panel-password-error { min-height: 18px; margin-top: 9px; color: #c62828; font-size: 0.78rem; }
     .device-check { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 23, 42, 0.82); z-index: 20; }
     .device-check-message { width: min(440px, 100%); padding: 28px; border-radius: 12px; background: #ffffff; color: #263238; text-align: center; box-shadow: 0 16px 40px rgba(15, 23, 42, 0.35); }
     .device-check-message h2 { margin: 0 0 10px; }
@@ -530,7 +523,12 @@
         <div class="role-form">
           <input id="roleUserInput" type="text" placeholder="Player name or email" autocomplete="off" />
           <select id="roleSelect">
-            <option value="user">User</option><option value="vip">VIP</option><option value="moderator">Moderator</option><option value="tester">Tester</option><option value="champion">Champion</option><option value="admin">Admin</option><option value="senior admin">Senior Admin</option><option value="co-owner">Co-Owner</option><option value="developer">Developer</option><option value="coder">Coder</option><option value="designer">Designer</option><option value="community manager">Community Manager</option><option value="support">Support</option><option value="helper">Helper</option><option value="guide">Guide</option><option value="mentor">Mentor</option><option value="teacher">Teacher</option><option value="researcher">Researcher</option><option value="writer">Writer</option><option value="editor">Editor</option><option value="translator">Translator</option><option value="event host">Event Host</option><option value="organizer">Organizer</option><option value="content creator">Content Creator</option><option value="streamer">Streamer</option><option value="early supporter">Early Supporter</option><option value="founder">Founder</option><option value="veteran">Veteran</option><option value="legend">Legend</option><option value="expert">Expert</option><option value="pro">Pro</option><option value="speed typist">Speed Typist</option><option value="accuracy master">Accuracy Master</option><option value="streak master">Streak Master</option><option value="record holder">Record Holder</option><option value="bug hunter">Bug Hunter</option><option value="qa lead">QA Lead</option><option value="security reviewer">Security Reviewer</option><option value="ambassador">Ambassador</option><option value="honorary member">Honorary Member</option>
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+            <option value="mod">Mod</option>
+            <option value="semi owner">Semi Owner</option>
+            <option value="half owner">Half Owner</option>
+            <option value="coowner">Co-Owner</option>
           </select>
           <button class="small-btn" id="giveRoleBtn" type="button">Give role</button>
         </div>
@@ -540,16 +538,6 @@
     </aside>
     </div>
   </main>
-
-  <div class="panel-password-dialog" id="panelPasswordDialog" role="dialog" aria-modal="true" aria-labelledby="panelPasswordTitle">
-    <form class="panel-password-box" id="panelPasswordForm">
-      <h2 id="panelPasswordTitle">Enter password</h2>
-      <p id="panelPasswordDescription">Enter password to open the panel.</p>
-      <input id="panelPasswordInput" type="password" autocomplete="current-password" placeholder="Enter password" required />
-      <div class="panel-password-error" id="panelPasswordError" role="status" aria-live="polite"></div>
-      <div class="password-actions"><button class="small-btn" type="button" id="cancelPanelPassword">Cancel</button><button class="btn" type="submit">Unlock</button></div>
-    </form>
-  </div>
 
   <div class="device-check" id="deviceCheck" role="status" aria-live="polite">
     <div class="device-check-message">
@@ -758,35 +746,8 @@
     const roleUserInputEl = document.getElementById('roleUserInput');
     const roleSelectEl = document.getElementById('roleSelect');
     const roleMessageEl = document.getElementById('roleMessage');
-    const panelPasswordDialogEl = document.getElementById('panelPasswordDialog');
-    const panelPasswordFormEl = document.getElementById('panelPasswordForm');
-    const panelPasswordInputEl = document.getElementById('panelPasswordInput');
-    const panelPasswordErrorEl = document.getElementById('panelPasswordError');
     const resetCaptchaEl = document.getElementById('resetCaptcha');
-    const ADMIN_PANEL_PASSWORD_HASHES = new Set([
-      '8a4c61a7e858b2314b256af6a63dd2d797dcb942e0ee25428ac36e370892424d',
-      '5cb4210bd5d31c150b5fe4a61e62741c8faa85dbba32b4e38e248ffe8eabf087',
-      '279e4648e733730aaf159683402ad840e2fd87abe813495a7362e5ed941597ab',
-      '45621645cf274e578a7c2ab3031675a5c41f2b5af8f8c52280f83cf973b947bc',
-      'fnv1a-d5f4a3f4',
-      'fnv1a-ce80ffb8',
-      'fnv1a-81909142',
-      'fnv1a-eebeb4af'
-    ]);
-    const OWNER_PANEL_PASSWORD_HASHES = new Set([
-      'aa6620231529b5bcb4e9f0d0ce117588a98e3f2938c4104298f584dbd47d0d8c',
-      'fnv1a-c9a3dedd'
-    ]);
-    const NORMAL_PANEL_ROLES = new Set([
-      'admin', 'senior admin', 'co-owner', 'developer', 'coder', 'designer',
-      'community manager', 'support', 'helper', 'guide', 'mentor', 'teacher',
-      'researcher', 'writer', 'editor', 'translator', 'event host', 'organizer',
-      'content creator', 'streamer', 'early supporter', 'founder', 'veteran',
-      'legend', 'expert', 'pro', 'speed typist', 'accuracy master', 'streak master',
-      'record holder', 'bug hunter', 'qa lead', 'security reviewer', 'ambassador',
-      'honorary member'
-    ]);
-    let panelPasswordMode = 'admin';
+    const NORMAL_PANEL_ROLES = new Set(['admin', 'mod', 'semi owner', 'half owner', 'coowner']);
     let authenticatedUserEmail = '';
     let currentProfileRole = 'user';
     const OWNER_ACCOUNT_EMAILS = new Set(['bigfanoe@gmail.com', '952976@omardblairk8.com']);
@@ -845,20 +806,6 @@
     let authMode = 'login';
     let pausedForGoogleSearch = false;
 
-    async function hashPassword(password) {
-      if (!crypto.subtle) {
-        let hash = 0x811c9dc5;
-        for (const byte of new TextEncoder().encode(password)) {
-          hash ^= byte;
-          hash = Math.imul(hash, 0x01000193) >>> 0;
-        }
-        return `fnv1a-${hash.toString(16).padStart(8, '0')}`;
-      }
-      const bytes = new TextEncoder().encode(password);
-      const hash = await crypto.subtle.digest('SHA-256', bytes);
-      return Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, '0')).join('');
-    }
-
     function getAccounts() {
       return JSON.parse(localStorage.getItem('typingAccounts') || '{}');
     }
@@ -904,7 +851,7 @@
     }
 
     function hasOwnerPanelAccess() {
-      return isOwnerAccount(authenticatedUserEmail) || currentProfileRole === 'honorary member';
+      return isOwnerAccount(authenticatedUserEmail) || ['half owner', 'coowner'].includes(currentProfileRole);
     }
 
     function updateAccountUI() {
@@ -923,6 +870,8 @@
       deleteAccountBtnEl.hidden = !email;
       logoutBtnEl.hidden = !email;
       if (email) document.getElementById('playerName').value = displayName;
+      if (workspaceEl.classList.contains('panel-open') && !hasNormalPanelAccess()) closeAdminPanel();
+      if (workspaceEl.classList.contains('owner-open') && !hasOwnerPanelAccess()) closeOwnerPanel();
     }
 
     function setAuthMode(mode) {
@@ -1515,51 +1464,6 @@
     }
     document.getElementById('closeOwnerBtn').addEventListener('click', closeOwnerPanel);
 
-    function openPanelPasswordDialog(mode) {
-      panelPasswordMode = mode;
-      const panelName = mode === 'owner' ? 'owner role panel' : 'typing settings';
-      document.getElementById('panelPasswordTitle').innerText = 'Enter password';
-      document.getElementById('panelPasswordDescription').innerText = `Enter password to open ${panelName}.`;
-      panelPasswordInputEl.value = '';
-      panelPasswordErrorEl.innerText = '';
-      panelPasswordDialogEl.classList.add('is-visible');
-      panelPasswordInputEl.focus();
-    }
-
-    function closePanelPasswordDialog() {
-      panelPasswordDialogEl.classList.remove('is-visible');
-      panelPasswordInputEl.value = '';
-      panelPasswordErrorEl.innerText = '';
-    }
-
-    document.getElementById('cancelPanelPassword').addEventListener('click', closePanelPasswordDialog);
-    panelPasswordFormEl.addEventListener('submit', async event => {
-      event.preventDefault();
-      panelPasswordErrorEl.innerText = '';
-      let passwordHash;
-      try {
-        passwordHash = await hashPassword(panelPasswordInputEl.value.trim().toLowerCase());
-      } catch (error) {
-        console.error('Unable to verify panel password:', error);
-        panelPasswordErrorEl.innerText = 'Unable to verify the password in this browser.';
-        return;
-      }
-
-      const allowedHashes = panelPasswordMode === 'owner'
-        ? OWNER_PANEL_PASSWORD_HASHES
-        : ADMIN_PANEL_PASSWORD_HASHES;
-      if (!allowedHashes.has(passwordHash)) {
-        panelPasswordErrorEl.innerText = 'Incorrect password.';
-        panelPasswordInputEl.select();
-        return;
-      }
-
-      const mode = panelPasswordMode;
-      closePanelPasswordDialog();
-      if (mode === 'owner') openOwnerPanel();
-      else openAdminPanel();
-    });
-
     document.getElementById('giveRoleBtn').addEventListener('click', async () => {
       const targetName = roleUserInputEl.value.trim().replace(/^user:\s*/i, '');
       roleMessageEl.classList.remove('success');
@@ -1690,13 +1594,10 @@
       if (event.key === '\\') {
         if (workspaceEl.classList.contains('panel-open')) closeAdminPanel();
         else if (hasNormalPanelAccess()) openAdminPanel();
-        else openPanelPasswordDialog('admin');
       } else if (workspaceEl.classList.contains('owner-open')) {
         closeOwnerPanel();
       } else if (hasOwnerPanelAccess()) {
         openOwnerPanel();
-      } else {
-        openPanelPasswordDialog('owner');
       }
     });
 
