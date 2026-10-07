@@ -521,7 +521,7 @@
       <section class="feature">
         <div class="feature-label">Give a role</div>
         <div class="role-form">
-          <input id="roleUserInput" type="text" placeholder="Player name or email" autocomplete="off" />
+          <input id="roleUserInput" type="text" placeholder="Email, player name, or Supabase user ID" autocomplete="off" />
           <select id="roleSelect">
             <option value="user">User</option>
             <option value="admin">Admin</option>
@@ -1473,19 +1473,23 @@
       }
 
       const normalizedTarget = targetName.toLowerCase();
-      const { data: targetProfiles, error: profileError } = await supabaseClient
-        .from('profiles')
-        .select('id, email, display_name');
+      const { data: targetProfiles, error: profileError } = await supabaseClient.rpc('find_profile_for_role_grant', {
+        p_query: normalizedTarget
+      });
       if (profileError) {
-        roleMessageEl.innerText = 'Unable to look up players. Check the Supabase profiles read policy.';
+        console.error('Profile lookup failed:', profileError);
+        if (profileError.code === '42501') {
+          roleMessageEl.innerText = 'Your account is not authorized to look up players.';
+        } else if (profileError.code === 'PGRST202' || profileError.code === '42883') {
+          roleMessageEl.innerText = 'Profile lookup is not enabled yet. Apply the profile lookup SQL migration in Supabase.';
+        } else {
+          roleMessageEl.innerText = 'Unable to look up players. Check the browser console for the Supabase error.';
+        }
         return;
       }
-      const matches = (targetProfiles || []).filter(profile =>
-        profile.email?.toLowerCase() === normalizedTarget ||
-        profile.display_name?.toLowerCase() === normalizedTarget
-      );
+      const matches = targetProfiles || [];
       if (!matches.length) {
-        roleMessageEl.innerText = 'No matching player profile was found.';
+        roleMessageEl.innerText = 'No matching Supabase account was found. Enter the exact email; the player must have signed up first.';
         return;
       }
       if (matches.length > 1) {
@@ -1502,7 +1506,7 @@
         if (roleError.code === '42501') {
           roleMessageEl.innerText = 'Your account is not authorized to grant roles.';
         } else if (roleError.code === 'PGRST202' || roleError.code === '42883') {
-          roleMessageEl.innerText = 'Role grants are not enabled yet. Apply the secure role-grant SQL migration in Supabase.';
+          roleMessageEl.innerText = 'Role grants are not enabled yet. Apply the latest role-grant SQL migration in Supabase.';
         } else {
           roleMessageEl.innerText = 'Unable to grant that role. Check the browser console for the Supabase error.';
         }
