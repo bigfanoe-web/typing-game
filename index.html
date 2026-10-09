@@ -177,6 +177,25 @@
       color: #2c3e50;
     }
 
+    .leaderboard {
+      margin-top: 22px;
+      padding: 16px;
+      border: 1px solid #dce6e2;
+      border-radius: 8px;
+      background: #f8f9fa;
+      text-align: left;
+    }
+    .leaderboard-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .leaderboard-heading h2 { margin: 0; color: #263238; font-size: 1.15rem; }
+    .leaderboard-heading button { margin: 0; }
+    .leaderboard-status { min-height: 18px; margin: 8px 0; color: #607d8b; font-size: 0.8rem; }
+    .leaderboard-table-wrap { overflow-x: auto; }
+    .leaderboard table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .leaderboard th, .leaderboard td { padding: 8px 6px; border-bottom: 1px solid #dce6e2; text-align: left; }
+    .leaderboard th { color: #607d8b; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .leaderboard td:last-child, .leaderboard th:last-child { text-align: right; }
+    .leaderboard tbody tr:last-child td { border-bottom: 0; }
+
     .quote-display {
       font-size: 1.25rem;
       line-height: 1.6;
@@ -217,6 +236,14 @@
     .device-check-message { width: min(440px, 100%); padding: 28px; border-radius: 12px; background: #ffffff; color: #263238; text-align: center; box-shadow: 0 16px 40px rgba(15, 23, 42, 0.35); }
     .device-check-message h2 { margin: 0 0 10px; }
     .device-check-message p { margin: 0; color: #607d8b; line-height: 1.5; }
+
+    .banned-overlay { position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 23, 42, 0.94); }
+    .banned-overlay[hidden] { display: none; }
+    .banned-message { width: min(440px, 100%); padding: 28px; border-radius: 12px; background: #ffffff; color: #263238; text-align: center; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35); }
+    .banned-message h2 { margin: 0 0 10px; }
+    .banned-message p { margin: 0 0 18px; color: #607d8b; line-height: 1.5; }
+    .banned-message button { margin: 0; }
+    .banned-error { min-height: 18px; margin-top: 10px; color: #c62828; font-size: 0.8rem; }
 
     .auth-dialog { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(38, 50, 56, 0.38); z-index: 6; }
     .auth-dialog.is-visible { display: flex; }
@@ -495,6 +522,19 @@
         <button class="small-btn" type="button" data-learning-subject="history">History</button>
         <button class="small-btn" type="button" data-learning-subject="humanities">Humanities</button>
       </div>
+      <section class="leaderboard" aria-labelledby="leaderboardTitle">
+        <div class="leaderboard-heading">
+          <h2 id="leaderboardTitle">Leaderboard</h2>
+          <button class="small-btn" id="refreshLeaderboardBtn" type="button">Refresh</button>
+        </div>
+        <p class="leaderboard-status" id="leaderboardStatus" role="status" aria-live="polite">Loading top scores...</p>
+        <div class="leaderboard-table-wrap">
+          <table>
+            <thead><tr><th scope="col">#</th><th scope="col">Player</th><th scope="col">Accuracy</th><th scope="col">WPM</th></tr></thead>
+            <tbody id="leaderboardRows"></tbody>
+          </table>
+        </div>
+      </section>
     </div>
 
     <div class="admin-stack">
@@ -509,7 +549,7 @@
       <section class="feature"><div class="feature-label">6. Auto-new quote <input class="toggle" id="autoQuoteToggle" type="checkbox" checked /></div></section>
       <section class="feature"><div class="feature-label">7. Current session <span class="feature-value" id="sessionValue">Ready</span></div><div class="feature-actions"><button class="small-btn" id="pauseBtn">Pause</button><button class="small-btn" id="newQuoteBtn">New quote</button></div></section>
       <section class="feature"><div class="feature-label">8. Best WPM <span class="feature-value" id="bestWpm">0</span></div></section>
-      <section class="feature"><div class="feature-label">9. Highest WPM goal <span class="feature-value">WPM</span></div><input id="wpmGoalInput" type="number" min="1" max="1000" value="40" /></section>
+      <section class="feature"><div class="feature-label">9. Highest WPM goal <span class="feature-value">WPM</span></div><input id="wpmGoalInput" type="number" min="1" max="10000000" value="40" /></section>
       <section class="feature"><div class="feature-label">10. Sentence length</div><select id="wordLengthSelect"><option value="any" selected>Any length</option><option value="short">Short sentences</option><option value="medium">Medium sentences</option><option value="long">Long sentences</option></select></section>
       <section class="feature"><div class="feature-label">11. Auto Typer <span class="feature-value" id="autoTyperStatus">Continuous</span><input class="toggle" id="autoTyperToggle" type="checkbox" /></div><div class="feature-label" style="margin-top: 9px;">Typing accuracy <span class="feature-value">%</span></div><input id="autoAccuracyInput" type="number" min="1" max="100" value="100" /></section>
       <section class="feature"><div class="feature-label">12. Export results</div><div class="feature-actions"><button class="small-btn" id="exportBtn">Download CSV</button><button class="small-btn" id="clearBtn">Clear best</button></div></section>
@@ -523,6 +563,7 @@
         <div class="role-form">
           <input id="roleUserInput" type="text" placeholder="Email, player name, or Supabase user ID" autocomplete="off" />
           <select id="roleSelect">
+            <option value="banned">Banned</option>
             <option value="user">User</option>
             <option value="admin">Admin</option>
             <option value="mod">Mod</option>
@@ -534,6 +575,16 @@
         </div>
         <div class="role-message" id="roleMessage" role="status" aria-live="polite"></div>
       </section>
+      <section class="feature">
+        <div class="feature-label">Change player WPM</div>
+        <div class="role-form">
+          <input id="wpmTargetUserInput" type="text" placeholder="Player email, name, or Supabase user ID" autocomplete="off" />
+          <input id="wpmTargetValueInput" type="number" min="1" max="10000000" value="40" aria-label="Leaderboard WPM" />
+          <button class="small-btn" id="changePlayerWpmBtn" type="button">Set leaderboard WPM</button>
+          <button class="small-btn" id="removePlayerLeaderboardBtn" type="button">Remove leaderboard entry</button>
+        </div>
+        <div class="role-message" id="changePlayerWpmMessage" role="status" aria-live="polite"></div>
+      </section>
       <section class="feature"><div class="feature-value">Role changes are authorized by Supabase, not this page.</div></section>
     </aside>
     </div>
@@ -543,6 +594,15 @@
     <div class="device-check-message">
       <h2>Press C</h2>
       <p>Press the C key within five seconds or you will be redirected to a blank page.</p>
+    </div>
+  </div>
+
+  <div class="banned-overlay" id="bannedOverlay" role="dialog" aria-modal="true" aria-labelledby="bannedTitle" hidden>
+    <div class="banned-message">
+      <h2 id="bannedTitle">Account banned</h2>
+      <p>This account cannot access the game or submit leaderboard scores. Contact an owner if you think this is a mistake.</p>
+      <button class="small-btn" id="bannedSignOutBtn" type="button">Sign out</button>
+      <div class="banned-error" id="bannedError" role="status" aria-live="polite"></div>
     </div>
   </div>
 
@@ -718,6 +778,9 @@
     const accuracyEl = document.getElementById('accuracy');
     const startBtn = document.getElementById('startBtn');
     const workspaceEl = document.getElementById('workspace');
+    const leaderboardRowsEl = document.getElementById('leaderboardRows');
+    const leaderboardStatusEl = document.getElementById('leaderboardStatus');
+    const refreshLeaderboardBtnEl = document.getElementById('refreshLeaderboardBtn');
     const exactRoleValueEl = document.getElementById('exactRoleValue');
     const languageSelectEl = document.getElementById('languageSelect');
     const backgroundSelectEl = document.getElementById('backgroundSelect');
@@ -746,6 +809,11 @@
     const roleUserInputEl = document.getElementById('roleUserInput');
     const roleSelectEl = document.getElementById('roleSelect');
     const roleMessageEl = document.getElementById('roleMessage');
+    const bannedOverlayEl = document.getElementById('bannedOverlay');
+    const bannedErrorEl = document.getElementById('bannedError');
+    const wpmTargetUserInputEl = document.getElementById('wpmTargetUserInput');
+    const wpmTargetValueInputEl = document.getElementById('wpmTargetValueInput');
+    const changePlayerWpmMessageEl = document.getElementById('changePlayerWpmMessage');
     const resetCaptchaEl = document.getElementById('resetCaptcha');
     const NORMAL_PANEL_ROLES = new Set(['admin', 'mod', 'semi owner', 'half owner', 'coowner']);
     let authenticatedUserEmail = '';
@@ -818,6 +886,84 @@
       return OWNER_ACCOUNT_EMAILS.has((email || '').toLowerCase());
     }
 
+    let leaderboardRequestInFlight = false;
+    async function loadLeaderboard(showLoading = true) {
+      if (leaderboardRequestInFlight) return;
+      leaderboardRequestInFlight = true;
+      if (showLoading) leaderboardStatusEl.textContent = 'Loading top scores...';
+      refreshLeaderboardBtnEl.disabled = true;
+      try {
+        const { data: scores, error } = await supabaseClient.rpc('get_public_leaderboard');
+        if (error) {
+          console.error('Leaderboard load failed:', error);
+          leaderboardRowsEl.replaceChildren();
+          if (error.code === 'PGRST202' || error.code === '42883') {
+            leaderboardStatusEl.textContent = 'Leaderboard is not set up in Supabase yet. Apply 20261008010000_add_typing_leaderboard.sql, then refresh.';
+          } else {
+            leaderboardStatusEl.textContent = `Unable to load leaderboard (${error.code || 'unknown'}): ${error.message}`;
+          }
+          return;
+        }
+
+        leaderboardRowsEl.replaceChildren();
+        if (!scores?.length) {
+          leaderboardStatusEl.textContent = 'No scores yet. Sign in and finish a typing test to get on the board.';
+          return;
+        }
+
+        scores.forEach(score => {
+          const row = document.createElement('tr');
+          [score.rank_position, score.player_name, `${score.accuracy}%`, score.best_wpm].forEach(value => {
+            const cell = document.createElement('td');
+            cell.textContent = String(value);
+            row.appendChild(cell);
+          });
+          leaderboardRowsEl.appendChild(row);
+        });
+        leaderboardStatusEl.textContent = 'All-time best scores. Sign in to submit your score.';
+      } catch (error) {
+        console.error('Leaderboard load failed:', error);
+        leaderboardRowsEl.replaceChildren();
+        leaderboardStatusEl.textContent = 'Unable to connect to the leaderboard. Check your connection and try again.';
+      } finally {
+        refreshLeaderboardBtnEl.disabled = false;
+        leaderboardRequestInFlight = false;
+      }
+    }
+
+    async function submitLeaderboardScore(wpm, accuracy, durationSeconds) {
+      if (currentProfileRole === 'banned') {
+        leaderboardStatusEl.textContent = 'Banned accounts cannot submit leaderboard scores.';
+        return;
+      }
+      if (!authenticatedUserEmail) {
+        leaderboardStatusEl.textContent = 'Sign in to add your score to the leaderboard.';
+        return;
+      }
+      if (wpm < 1) return;
+
+      leaderboardStatusEl.textContent = 'Saving your score...';
+      const { error } = await supabaseClient.rpc('submit_leaderboard_score', {
+        p_best_wpm: wpm,
+        p_accuracy: accuracy,
+        p_duration_seconds: durationSeconds
+      });
+      if (error) {
+        console.error('Leaderboard score submission failed:', error);
+        if (error.code === '42501' && error.message.includes('banned')) {
+          leaderboardStatusEl.textContent = 'Banned accounts cannot submit leaderboard scores.';
+        } else if (error.code === 'PGRST202' || error.code === '42883') {
+          leaderboardStatusEl.textContent = 'Score submission is not set up in Supabase yet. Apply 20261008010000_add_typing_leaderboard.sql.';
+        } else {
+          leaderboardStatusEl.textContent = `Unable to save score (${error.code || 'unknown'}): ${error.message}`;
+        }
+        return;
+      }
+
+      leaderboardStatusEl.textContent = 'Score saved. Loading updated leaderboard...';
+      await loadLeaderboard();
+    }
+
     async function syncProfileCache(user) {
       currentProfileRole = 'user';
       if (!user?.email) return;
@@ -870,6 +1016,12 @@
       deleteAccountBtnEl.hidden = !email;
       logoutBtnEl.hidden = !email;
       if (email) document.getElementById('playerName').value = displayName;
+      bannedOverlayEl.hidden = currentProfileRole !== 'banned';
+      if (currentProfileRole === 'banned') {
+        if (isPlaying) endGame(false);
+        closeAdminPanel();
+        closeOwnerPanel();
+      }
       if (workspaceEl.classList.contains('panel-open') && !hasNormalPanelAccess()) closeAdminPanel();
       if (workspaceEl.classList.contains('owner-open') && !hasOwnerPanelAccess()) closeOwnerPanel();
     }
@@ -912,6 +1064,9 @@
     });
 
     document.getElementById('bestWpm').innerText = bestScore;
+    refreshLeaderboardBtnEl.addEventListener('click', loadLeaderboard);
+    void loadLeaderboard();
+    setInterval(() => void loadLeaderboard(false), 4000);
 
     async function getRandomQuote() {
       const lengthMode = document.getElementById('wordLengthSelect').value;
@@ -948,26 +1103,15 @@
       const selectedLanguage = languageSelectEl.value;
       const requestId = ++translationRequestId;
       let quote = await getRandomQuote();
-      if (requestId !== translationRequestId) return;
+      if (requestId !== translationRequestId) return '';
 
       if (selectedLanguage !== 'English') {
-        quoteDisplayEl.innerText = 'Offline language fallback: showing original English text.';
-        setTimeout(() => {
-          if (requestId !== translationRequestId) return;
-          quoteDisplayEl.innerHTML = '';
-          quote.split('').forEach(char => {
-            const charSpan = document.createElement('span');
-            charSpan.innerText = char;
-            quoteDisplayEl.appendChild(charSpan);
-          });
-          quoteInputEl.value = '';
-          previousInputLength = 0;
-          previousInputCorrect = 0;
-        }, 0);
-        return;
+        quoteDisplayEl.setAttribute('aria-label', `Offline language fallback: showing original English text. ${quote}`);
+      } else {
+        quoteDisplayEl.removeAttribute('aria-label');
       }
 
-      if (requestId !== translationRequestId) return;
+      if (requestId !== translationRequestId) return '';
       quoteDisplayEl.innerHTML = '';
       quote.split('').forEach(char => {
         const charSpan = document.createElement('span');
@@ -977,9 +1121,16 @@
       quoteInputEl.value = '';
       previousInputLength = 0;
       previousInputCorrect = 0;
+      return quote;
     }
 
     async function startGame() {
+      if (currentProfileRole === 'banned') return;
+      clearInterval(timer);
+      clearInterval(autoTyperTimer);
+      clearTimeout(autoTyperCountdown);
+      autoTyperTimer = null;
+      autoTyperCountdown = null;
       isPlaying = true;
       timeLeft = timeLimit;
       isPaused = false;
@@ -1000,7 +1151,6 @@
       
       await renderQuote();
       
-      clearInterval(timer);
       timer = setInterval(updateTimer, 1000);
     }
 
@@ -1015,7 +1165,7 @@
       }
     }
 
-    function endGame() {
+    function endGame(saveScore = true) {
       clearInterval(timer);
       stopAutoTyper();
       isPlaying = false;
@@ -1024,6 +1174,13 @@
       document.getElementById('sessionValue').innerText = 'Complete';
       document.getElementById('statusDot').style.background = '#f0ad4e';
       calculateStats();
+      if (saveScore) {
+        void submitLeaderboardScore(
+          Number(wpmEl.innerText) || 0,
+          Number.parseInt(accuracyEl.innerText, 10) || 0,
+          timeLimit
+        );
+      }
     }
 
     function calculateStats() {
@@ -1046,7 +1203,7 @@
     }
 
     quoteInputEl.addEventListener('input', () => {
-      if (!isPlaying || isPaused) return;
+      if (!isPlaying || isPaused || currentProfileRole === 'banned') return;
 
       const arrayQuote = quoteDisplayEl.querySelectorAll('span');
       const arrayValue = quoteInputEl.value.split('');
@@ -1077,14 +1234,24 @@
       previousInputCorrect = currentCorrect;
 
       // If sentence completed, generate a new prompt without stopping timer
-      if (allCorrect && arrayValue.length === arrayQuote.length && document.getElementById('autoQuoteToggle').checked) {
+      if (allCorrect && arrayValue.length === arrayQuote.length &&
+          document.getElementById('autoQuoteToggle').checked &&
+          !document.getElementById('autoTyperToggle').checked) {
         renderQuote();
       }
       
       calculateStats();
     });
 
-    startBtn.addEventListener('click', startGame);
+    startBtn.addEventListener('click', async () => {
+      const autoTyperEnabled = document.getElementById('autoTyperToggle').checked;
+      if (autoTyperEnabled) {
+        await startGame();
+        await startAutoTyper();
+      } else {
+        await startGame();
+      }
+    });
 
     document.getElementById('nextWordBtn').addEventListener('click', () => {
       if (!isPlaying || isPaused) return;
@@ -1223,7 +1390,7 @@
     });
 
     document.getElementById('wpmGoalInput').addEventListener('change', event => {
-      event.target.value = Math.max(1, Math.min(1000, Number(event.target.value) || 40));
+      event.target.value = Math.max(1, Math.min(10000000, Math.round(Number(event.target.value) || 40)));
     });
 
     document.getElementById('autoAccuracyInput').addEventListener('change', event => {
@@ -1278,12 +1445,12 @@
       document.getElementById('autoAccuracyInput').value = '100';
       stopAutoTyper();
       document.getElementById('sessionValue').innerText = 'Ready';
-      if (isPlaying) endGame();
+      if (isPlaying) endGame(false);
       timerEl.innerText = '60s';
     });
 
     function stopAutoTyper() {
-      clearInterval(autoTyperTimer);
+      clearTimeout(autoTyperTimer);
       clearTimeout(autoTyperCountdown);
       autoTyperTimer = null;
       autoTyperCountdown = null;
@@ -1291,38 +1458,67 @@
       document.getElementById('autoTyperStatus').innerText = 'Continuous';
     }
 
-    document.getElementById('autoTyperToggle').addEventListener('change', async event => {
+    async function startAutoTyper() {
+      const autoTyperToggleEl = document.getElementById('autoTyperToggle');
+      if (!autoTyperToggleEl.checked) return;
+      clearTimeout(autoTyperTimer);
+      clearTimeout(autoTyperCountdown);
+      autoTyperTimer = null;
+      autoTyperCountdown = null;
+      if (!isPlaying) await startGame();
+      if (!autoTyperToggleEl.checked) return;
+      isPaused = false;
+      let currentText = Array.from(quoteDisplayEl.querySelectorAll('span')).map(span => span.innerText).join('');
+      let characterIndex = 0;
+      let autoTyperBusy = false;
+      const autoAccuracy = () => Math.max(1, Math.min(100, Number(document.getElementById('autoAccuracyInput').value) || 100));
+      const targetWpm = () => Math.max(1, Math.min(10000000, Math.round(Number(document.getElementById('wpmGoalInput').value) || 40)));
+      document.getElementById('autoTyperStatus').innerText = `Starting in 3s · ${targetWpm()} WPM`;
+      autoTyperCountdown = setTimeout(() => {
+        if (!autoTyperToggleEl.checked || !isPlaying) return;
+        const typeNextCharacter = async () => {
+          if (!autoTyperToggleEl.checked || !isPlaying) return;
+          if (isPaused || autoTyperBusy) {
+            autoTyperTimer = setTimeout(typeNextCharacter, 100);
+            return;
+          }
+          autoTyperBusy = true;
+          try {
+            if (characterIndex >= currentText.length) {
+              if (!document.getElementById('autoQuoteToggle').checked) {
+                stopAutoTyper();
+                return;
+              }
+              currentText = await renderQuote();
+              characterIndex = 0;
+              if (!currentText) return;
+            }
+            const intendedCharacter = currentText[characterIndex++];
+            const shouldBeCorrect = Math.random() * 100 < autoAccuracy();
+            const typedCharacter = shouldBeCorrect ? intendedCharacter : String.fromCharCode(97 + Math.floor(Math.random() * 26));
+            quoteInputEl.value += typedCharacter;
+            quoteInputEl.dispatchEvent(new Event('input'));
+            document.getElementById('autoTyperStatus').innerText = `${targetWpm()} WPM · ${autoAccuracy()}% accuracy`;
+          } catch (error) {
+            console.error('Auto typer failed:', error);
+            stopAutoTyper();
+          } finally {
+            autoTyperBusy = false;
+            if (autoTyperToggleEl.checked && isPlaying) {
+              autoTyperTimer = setTimeout(typeNextCharacter, 12000 / targetWpm());
+            }
+          }
+        };
+        void typeNextCharacter();
+      }, 3000);
+    }
+
+    document.getElementById('autoTyperToggle').addEventListener('change', event => {
       if (!event.target.checked) {
         stopAutoTyper();
         return;
       }
-      if (!isPlaying) await startGame();
-      isPaused = false;
-      let currentText = Array.from(quoteDisplayEl.querySelectorAll('span')).map(span => span.innerText).join('');
-      let characterIndex = 0;
-      const autoAccuracy = () => Math.max(1, Math.min(100, Number(document.getElementById('autoAccuracyInput').value) || 100));
-      document.getElementById('autoTyperStatus').innerText = 'Starting in 3s';
-      autoTyperCountdown = setTimeout(() => {
-        if (!event.target.checked || !isPlaying) return;
-        document.getElementById('autoTyperStatus').innerText = `${autoAccuracy()}% accuracy`;
-        autoTyperTimer = setInterval(() => {
-        if (!isPlaying || isPaused) return;
-        if (characterIndex >= currentText.length) {
-          if (!document.getElementById('autoQuoteToggle').checked) {
-            stopAutoTyper();
-            return;
-          }
-          renderQuote();
-          currentText = Array.from(quoteDisplayEl.querySelectorAll('span')).map(span => span.innerText).join('');
-          characterIndex = 0;
-        }
-        const intendedCharacter = currentText[characterIndex++];
-        const shouldBeCorrect = Math.random() * 100 < autoAccuracy();
-        const typedCharacter = shouldBeCorrect ? intendedCharacter : String.fromCharCode(97 + Math.floor(Math.random() * 26));
-        quoteInputEl.value += typedCharacter;
-        quoteInputEl.dispatchEvent(new Event('input'));
-        }, 45);
-      }, 3000);
+      void startAutoTyper();
     });
 
     loginBtnEl.addEventListener('click', () => openAuthDialog());
@@ -1402,13 +1598,18 @@
         nameErrorEl.innerText = 'Choose a name between 1 and 24 characters.';
         return;
       }
-      names[email] = trimmedName;
-      localStorage.setItem('typingDisplayNames', JSON.stringify(names));
       const { error } = await supabaseClient.from('profiles').update({ display_name: trimmedName }).eq('email', email);
       if (error) {
-        nameErrorEl.innerText = 'Unable to save your name right now.';
+        if (error.code === '23505') {
+          nameErrorEl.innerText = 'That username is already taken. Choose another one.';
+        } else {
+          console.error('Unable to save display name:', error);
+          nameErrorEl.innerText = 'Unable to save your name right now.';
+        }
         return;
       }
+      names[email] = trimmedName;
+      localStorage.setItem('typingDisplayNames', JSON.stringify(names));
       nameDialogEl.classList.remove('is-visible');
       updateAccountUI();
     });
@@ -1433,6 +1634,14 @@
         sessionStorage.removeItem('typingCurrentUser');
         updateAccountUI();
       });
+    });
+    document.getElementById('bannedSignOutBtn').addEventListener('click', async () => {
+      bannedErrorEl.textContent = '';
+      const { error } = await supabaseClient.auth.signOut();
+      if (error) {
+        console.error('Sign out failed:', error);
+        bannedErrorEl.textContent = `Unable to sign out (${error.code || 'unknown'}): ${error.message}`;
+      }
     });
 
     supabaseClient.auth.onAuthStateChange(async (_event, session) => {
@@ -1483,7 +1692,7 @@
         } else if (profileError.code === 'PGRST202' || profileError.code === '42883') {
           roleMessageEl.innerText = 'Profile lookup is not enabled yet. Apply the profile lookup SQL migration in Supabase.';
         } else {
-          roleMessageEl.innerText = 'Unable to look up players. Check the browser console for the Supabase error.';
+          roleMessageEl.innerText = `Unable to look up players (${profileError.code || 'unknown'}): ${profileError.message}`;
         }
         return;
       }
@@ -1515,6 +1724,99 @@
 
       roleMessageEl.innerText = `Role ${roleSelectEl.value} given to ${matches[0].display_name || matches[0].email}.`;
       roleMessageEl.classList.add('success');
+    });
+
+    document.getElementById('changePlayerWpmBtn').addEventListener('click', async () => {
+      const target = wpmTargetUserInputEl.value.trim();
+      const wpm = Math.round(Number(wpmTargetValueInputEl.value));
+      changePlayerWpmMessageEl.classList.remove('success');
+      if (!target) {
+        changePlayerWpmMessageEl.textContent = 'Enter a player email, name, or Supabase user ID.';
+        return;
+      }
+      if (!Number.isFinite(wpm) || wpm < 1 || wpm > 10000000) {
+        changePlayerWpmMessageEl.textContent = 'Enter a WPM value from 1 to 10,000,000.';
+        return;
+      }
+
+      const { data: matches, error: lookupError } = await supabaseClient.rpc('find_profile_for_role_grant', {
+        p_query: target.toLowerCase()
+      });
+      if (lookupError) {
+        console.error('Leaderboard player lookup failed:', lookupError);
+        changePlayerWpmMessageEl.textContent = `Unable to find player (${lookupError.code || 'unknown'}): ${lookupError.message}`;
+        return;
+      }
+      if (!matches?.length) {
+        changePlayerWpmMessageEl.textContent = 'No matching Supabase account was found.';
+        return;
+      }
+      if (matches.length > 1) {
+        changePlayerWpmMessageEl.textContent = 'More than one player has that name. Enter their email or user ID.';
+        return;
+      }
+
+      const { error } = await supabaseClient.rpc('owner_set_leaderboard_wpm', {
+        p_target_user_id: matches[0].id,
+        p_best_wpm: wpm
+      });
+      if (error) {
+        console.error('Leaderboard WPM update failed:', error);
+        changePlayerWpmMessageEl.textContent = `Unable to change WPM (${error.code || 'unknown'}): ${error.message}`;
+        return;
+      }
+
+      changePlayerWpmMessageEl.textContent = `Set ${matches[0].display_name || matches[0].email}'s leaderboard score to ${wpm} WPM.`;
+      changePlayerWpmMessageEl.classList.add('success');
+      void loadLeaderboard(false);
+    });
+
+    document.getElementById('removePlayerLeaderboardBtn').addEventListener('click', async () => {
+      const target = wpmTargetUserInputEl.value.trim();
+      changePlayerWpmMessageEl.classList.remove('success');
+      if (!target) {
+        changePlayerWpmMessageEl.textContent = 'Enter a player email, name, or Supabase user ID.';
+        return;
+      }
+      if (!window.confirm(`Remove the leaderboard entry for "${target}"? This will not delete their account.`)) return;
+
+      const { data: matches, error: lookupError } = await supabaseClient.rpc('find_profile_for_role_grant', {
+        p_query: target.toLowerCase()
+      });
+      if (lookupError) {
+        console.error('Leaderboard player lookup failed:', lookupError);
+        changePlayerWpmMessageEl.textContent = `Unable to find player (${lookupError.code || 'unknown'}): ${lookupError.message}`;
+        return;
+      }
+      if (!matches?.length) {
+        changePlayerWpmMessageEl.textContent = 'No matching Supabase account was found.';
+        return;
+      }
+      if (matches.length > 1) {
+        changePlayerWpmMessageEl.textContent = 'More than one player has that name. Enter their email or user ID.';
+        return;
+      }
+
+      const { data: removed, error } = await supabaseClient.rpc('owner_remove_leaderboard_entry', {
+        p_target_user_id: matches[0].id
+      });
+      if (error) {
+        console.error('Leaderboard entry removal failed:', error);
+        if (error.code === '42501') {
+          changePlayerWpmMessageEl.textContent = 'This player is protected and cannot be removed from the leaderboard.';
+        } else {
+          changePlayerWpmMessageEl.textContent = `Unable to remove leaderboard entry (${error.code || 'unknown'}): ${error.message}`;
+        }
+        return;
+      }
+      if (!removed) {
+        changePlayerWpmMessageEl.textContent = `${matches[0].display_name || matches[0].email} has no leaderboard entry.`;
+        return;
+      }
+
+      changePlayerWpmMessageEl.textContent = `Removed ${matches[0].display_name || matches[0].email} from the leaderboard.`;
+      changePlayerWpmMessageEl.classList.add('success');
+      void loadLeaderboard(false);
     });
 
     authFormEl.addEventListener('submit', async event => {
@@ -1593,6 +1895,7 @@
         deviceCheckEl.remove();
         return;
       }
+      if (currentProfileRole === 'banned') return;
       if (event.key !== '\\' && event.key !== ']') return;
       event.preventDefault();
       if (event.key === '\\') {
