@@ -31,8 +31,8 @@
       align-items: start;
     }
 
-    .workspace:not(.panel-open):not(.owner-open) { grid-template-columns: minmax(0, 820px); justify-content: center; }
-    .workspace:not(.panel-open):not(.owner-open) .admin-stack { display: none; }
+    .workspace:not(.panel-open):not(.owner-open):not(.riyaz-open) { grid-template-columns: minmax(0, 820px); justify-content: center; }
+    .workspace:not(.panel-open):not(.owner-open):not(.riyaz-open) .admin-stack { display: none; }
     .admin-stack {
       display: none;
       gap: 20px;
@@ -53,6 +53,12 @@
       display: grid;
     }
     .workspace.owner-open .admin-stack > .owner-panel {
+      display: block;
+    }
+    .workspace.riyaz-open .admin-stack {
+      display: grid;
+    }
+    .workspace.riyaz-open .admin-stack > .riyaz-panel {
       display: block;
     }
 
@@ -196,6 +202,60 @@
     .leaderboard td:last-child, .leaderboard th:last-child { text-align: right; }
     .leaderboard tbody tr:last-child td { border-bottom: 0; }
 
+    .practice-coach {
+      margin-top: 22px;
+      padding: 16px;
+      border: 1px solid #c7d2fe;
+      border-radius: 8px;
+      background: #eef2ff;
+      text-align: left;
+    }
+    .practice-coach h2 { margin: 0; color: #312e81; font-size: 1.15rem; }
+    .practice-coach p { color: #475569; font-size: 0.88rem; line-height: 1.5; }
+    .practice-controls { display: grid; grid-template-columns: 1fr 1fr auto; align-items: end; gap: 10px; }
+    .practice-controls label { display: grid; gap: 5px; color: #334155; font-size: 0.82rem; }
+    .practice-controls select,
+    .practice-coach textarea { width: 100%; padding: 9px; border: 1px solid #cbd5e1; border-radius: 5px; font: inherit; }
+    .practice-coach button { margin: 0; }
+    .practice-prompt { min-height: 54px; margin: 12px 0; padding: 10px; border-radius: 5px; background: #fff; color: #1e293b; line-height: 1.55; }
+    .practice-coach textarea { min-height: 90px; resize: vertical; }
+    .practice-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .practice-status { min-height: 20px; margin-bottom: 0; }
+    .practice-status.error { color: #b42318; }
+    .practice-status.success { color: #166534; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+    .definition-chat {
+      margin-top: 22px;
+      padding: 16px;
+      border: 1px solid #a7d7d0;
+      border-radius: 8px;
+      background: #effaf8;
+      text-align: left;
+    }
+    .definition-chat h2 { margin: 0; color: #134e4a; font-size: 1.15rem; }
+    .definition-chat-intro { color: #475569; font-size: 0.88rem; line-height: 1.5; }
+    .chat-transcript {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      max-height: 360px;
+      min-height: 90px;
+      overflow-y: auto;
+      padding: 10px;
+      border: 1px solid #d1e7e2;
+      border-radius: 6px;
+      background: #fff;
+    }
+    .chat-message { max-width: 92%; padding: 9px 11px; border-radius: 8px; color: #1e293b; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }
+    .chat-message.assistant { align-self: flex-start; background: #e2f3ef; }
+    .chat-message.user { align-self: flex-end; background: #dbeafe; }
+    .chat-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-top: 10px; }
+    .chat-form textarea { min-height: 48px; max-height: 140px; resize: vertical; padding: 10px; border: 1px solid #b8cbc5; border-radius: 6px; font: inherit; }
+    .chat-form button, .chat-fallback-actions button { margin: 0; }
+    .chat-fallback { margin: 8px 0 0; color: #7c2d12; font-size: 0.88rem; }
+    .chat-fallback-actions { display: flex; gap: 8px; margin-top: 8px; }
+
     .quote-display {
       font-size: 1.25rem;
       line-height: 1.6;
@@ -252,6 +312,9 @@
     .auth-box p { margin: 0 0 16px; color: #607d8b; font-size: 0.85rem; }
     .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 14px; }
     .workspace.owner-open .admin-stack > .admin-panel:not(.owner-panel) {
+      display: none;
+    }
+    .workspace.riyaz-open .admin-stack > .admin-panel:not(.riyaz-panel) {
       display: none;
     }
     .auth-forgot {
@@ -474,6 +537,9 @@
     @media (max-width: 760px) {
       body { align-items: flex-start; padding: 14px; }
       .workspace { grid-template-columns: 1fr; }
+      .practice-controls { grid-template-columns: 1fr; }
+      .chat-form { grid-template-columns: 1fr; }
+      .chat-form button { width: 100%; }
       .admin-stack { grid-row: 1; }
       .container { padding: 22px 16px; }
       .admin-panel { max-height: none; }
@@ -515,6 +581,39 @@
         <button class="small-btn" id="nextWordBtn" type="button" title="Skip to next word">Next word</button>
         <button class="small-btn" id="askGoogleBtn" type="button" title="Search Google for the current word">Ask Google</button>
       </div>
+      <section class="practice-coach" aria-labelledby="practiceCoachTitle">
+        <h2 id="practiceCoachTitle">Hand-built AI Typing Coach</h2>
+        <p>Get a typing exercise and personalized practice tips. This local coach uses handcrafted rules and does not send your typing to an AI service.</p>
+        <div class="practice-controls">
+          <label for="practiceDifficulty">Level
+            <select id="practiceDifficulty"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select>
+          </label>
+          <label for="practiceFocus">Focus
+            <select id="practiceFocus"><option value="accuracy">Accuracy</option><option value="speed">Speed</option><option value="punctuation">Punctuation</option><option value="numbers">Numbers</option></select>
+          </label>
+          <button class="small-btn" id="generatePracticeBtn" type="button">New exercise</button>
+        </div>
+        <div class="practice-prompt" id="practicePrompt" aria-live="polite">Choose a level and focus, then make an exercise.</div>
+        <label class="sr-only" for="practiceInput">Type the exercise here</label>
+        <textarea id="practiceInput" placeholder="Type the exercise here..." disabled></textarea>
+        <div class="practice-actions"><button class="small-btn" id="checkPracticeBtn" type="button" disabled>Check my typing</button></div>
+        <p class="practice-status" id="practiceStatus" role="status" aria-live="polite"></p>
+      </section>
+      <section class="definition-chat" aria-labelledby="definitionChatTitle">
+        <h2 id="definitionChatTitle">Word Helper</h2>
+        <p class="definition-chat-intro">Ask for a word or sentence definition. The online dictionary provides broad coverage; 128 bundled definitions plus words looked up online can help while offline. This hand-built, CPU-only helper does not use a GPU or a hosted AI model.</p>
+        <div class="chat-transcript" id="chatTranscript" role="log" aria-live="polite" aria-relevant="additions"></div>
+        <form class="chat-form" id="chatForm">
+          <label class="sr-only" for="chatInput">Ask about a word or sentence</label>
+          <textarea id="chatInput" maxlength="500" placeholder="Say hi, or ask about a word or sentence..." required></textarea>
+          <button class="small-btn" id="chatSendBtn" type="submit">Send</button>
+        </form>
+        <p class="chat-fallback" id="chatFallback" role="status" hidden>Couldn't reach the online dictionary. Retry or try offline.</p>
+        <div class="chat-fallback-actions" id="chatFallbackActions" hidden>
+          <button class="small-btn" id="retryOnlineBtn" type="button">Retry</button>
+          <button class="small-btn" id="tryOfflineBtn" type="button">Try offline</button>
+        </div>
+      </section>
       <div class="public-learning" aria-label="Learning subjects">
         <span>Explore</span>
         <button class="small-btn" type="button" data-learning-subject="math">Math</button>
@@ -556,13 +655,27 @@
       <section class="feature"><div class="feature-label">13. Reset game</div><button class="small-btn" id="resetBtn" style="width: 100%; margin-top: 7px;">Reset all settings</button></section>
       <section class="feature"><div class="feature-label">14. Learning center</div><div class="learning-actions"><button class="small-btn" type="button" data-learning-subject="math">Math</button><button class="small-btn" type="button" data-learning-subject="reading">Reading</button><button class="small-btn" type="button" data-learning-subject="history">History</button><button class="small-btn" type="button" data-learning-subject="humanities">Humanities</button></div></section>
     </aside>
-    <aside class="admin-panel owner-panel" aria-label="Owner role management">
-      <div class="admin-heading"><h2>Owner role management</h2><div class="admin-heading-actions"><button class="small-btn" id="closeOwnerBtn" type="button" aria-label="Close owner panel">Close</button></div></div>
+    <aside class="admin-panel owner-panel" aria-label="Halfowner-owner access only">
+      <div class="admin-heading"><h2>Halfowner-Owner Access Only</h2><div class="admin-heading-actions"><button class="small-btn" id="closeOwnerBtn" type="button" aria-label="Close owner panel">Close</button></div></div>
+      <section class="feature">
+        <div class="feature-label">Change player WPM</div>
+        <div class="role-form">
+          <input id="wpmTargetUserInput" type="text" placeholder="Player email, name, or Supabase user ID" autocomplete="off" />
+          <input id="wpmTargetValueInput" type="number" min="1" max="10000000" value="40" aria-label="Leaderboard WPM" />
+          <button class="small-btn" id="changePlayerWpmBtn" type="button">Set leaderboard WPM</button>
+          <button class="small-btn" id="removePlayerLeaderboardBtn" type="button">Remove leaderboard entry</button>
+        </div>
+        <div class="role-message" id="changePlayerWpmMessage" role="status" aria-live="polite"></div>
+      </section>
+      <section class="feature"><div class="feature-value">Role changes are authorized by Supabase, not this page.</div></section>
+    </aside>
+    <aside class="admin-panel riyaz-panel" aria-label="riyaz only muahhahha">
+      <div class="admin-heading"><h2>riyaz only muahhahha</h2><div class="admin-heading-actions"><button class="small-btn" id="closeRiyazBtn" type="button" aria-label="Close Riyaz-only panel">Close</button></div></div>
       <section class="feature">
         <div class="feature-label">Give a role</div>
         <div class="role-form">
           <input id="roleUserInput" type="text" placeholder="Email, player name, or Supabase user ID" autocomplete="off" />
-          <select id="roleSelect">
+          <select id="roleSelect" aria-label="Role to give">
             <option value="banned">Banned</option>
             <option value="user">User</option>
             <option value="admin">Admin</option>
@@ -575,17 +688,7 @@
         </div>
         <div class="role-message" id="roleMessage" role="status" aria-live="polite"></div>
       </section>
-      <section class="feature">
-        <div class="feature-label">Change player WPM</div>
-        <div class="role-form">
-          <input id="wpmTargetUserInput" type="text" placeholder="Player email, name, or Supabase user ID" autocomplete="off" />
-          <input id="wpmTargetValueInput" type="number" min="1" max="10000000" value="40" aria-label="Leaderboard WPM" />
-          <button class="small-btn" id="changePlayerWpmBtn" type="button">Set leaderboard WPM</button>
-          <button class="small-btn" id="removePlayerLeaderboardBtn" type="button">Remove leaderboard entry</button>
-        </div>
-        <div class="role-message" id="changePlayerWpmMessage" role="status" aria-live="polite"></div>
-      </section>
-      <section class="feature"><div class="feature-value">Role changes are authorized by Supabase, not this page.</div></section>
+      <section class="feature"><div class="feature-value">Access is restricted to the two owner-authorized accounts in Supabase. Press [ to toggle this panel.</div></section>
     </aside>
     </div>
   </main>
@@ -806,18 +909,32 @@
     const nameFormEl = document.getElementById('nameForm');
     const displayNameInputEl = document.getElementById('displayNameInput');
     const nameErrorEl = document.getElementById('nameError');
-    const roleUserInputEl = document.getElementById('roleUserInput');
-    const roleSelectEl = document.getElementById('roleSelect');
-    const roleMessageEl = document.getElementById('roleMessage');
     const bannedOverlayEl = document.getElementById('bannedOverlay');
     const bannedErrorEl = document.getElementById('bannedError');
     const wpmTargetUserInputEl = document.getElementById('wpmTargetUserInput');
     const wpmTargetValueInputEl = document.getElementById('wpmTargetValueInput');
     const changePlayerWpmMessageEl = document.getElementById('changePlayerWpmMessage');
     const resetCaptchaEl = document.getElementById('resetCaptcha');
+    const practiceDifficultyEl = document.getElementById('practiceDifficulty');
+    const practiceFocusEl = document.getElementById('practiceFocus');
+    const practicePromptEl = document.getElementById('practicePrompt');
+    const practiceInputEl = document.getElementById('practiceInput');
+    const practiceStatusEl = document.getElementById('practiceStatus');
+    const generatePracticeBtnEl = document.getElementById('generatePracticeBtn');
+    const checkPracticeBtnEl = document.getElementById('checkPracticeBtn');
+    const chatTranscriptEl = document.getElementById('chatTranscript');
+    const chatFormEl = document.getElementById('chatForm');
+    const chatInputEl = document.getElementById('chatInput');
+    const chatSendBtnEl = document.getElementById('chatSendBtn');
+    const chatFallbackEl = document.getElementById('chatFallback');
+    const chatFallbackActionsEl = document.getElementById('chatFallbackActions');
+    const roleUserInputEl = document.getElementById('roleUserInput');
+    const roleSelectEl = document.getElementById('roleSelect');
+    const roleMessageEl = document.getElementById('roleMessage');
     const NORMAL_PANEL_ROLES = new Set(['admin', 'mod', 'semi owner', 'half owner', 'coowner']);
     let authenticatedUserEmail = '';
     let currentProfileRole = 'user';
+    let canGrantRoles = false;
     const OWNER_ACCOUNT_EMAILS = new Set(['bigfanoe@gmail.com', '952976@omardblairk8.com']);
     const SUPABASE_URL = 'https://azochnzngwalhuvlogof.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_B8R8BniGtAdhIW3f1xBQhg_BPMr4AvR';
@@ -966,7 +1083,16 @@
 
     async function syncProfileCache(user) {
       currentProfileRole = 'user';
+      canGrantRoles = isOwnerAccount(user?.email || '');
       if (!user?.email) return;
+      if (!canGrantRoles) {
+        const { data: canGrant, error: accessError } = await supabaseClient.rpc('is_profile_role_grant_owner');
+        if (accessError) {
+          console.error('Unable to verify Riyaz panel access:', accessError);
+        } else {
+          canGrantRoles = canGrant === true;
+        }
+      }
       const { data: profile, error } = await supabaseClient
         .from('profiles')
         .select('email, display_name, role')
@@ -1000,6 +1126,10 @@
       return isOwnerAccount(authenticatedUserEmail) || ['half owner', 'coowner'].includes(currentProfileRole);
     }
 
+    function hasRiyazPanelAccess() {
+      return canGrantRoles;
+    }
+
     function updateAccountUI() {
       const email = sessionStorage.getItem('typingCurrentUser');
       const exactRole = isOwnerAccount(email) ? 'Owner' : currentProfileRole;
@@ -1021,9 +1151,11 @@
         if (isPlaying) endGame(false);
         closeAdminPanel();
         closeOwnerPanel();
+        closeRiyazPanel();
       }
       if (workspaceEl.classList.contains('panel-open') && !hasNormalPanelAccess()) closeAdminPanel();
       if (workspaceEl.classList.contains('owner-open') && !hasOwnerPanelAccess()) closeOwnerPanel();
+      if (workspaceEl.classList.contains('riyaz-open') && !hasRiyazPanelAccess()) closeRiyazPanel();
     }
 
     function setAuthMode(mode) {
@@ -1123,6 +1255,152 @@
       previousInputCorrect = 0;
       return quote;
     }
+
+    let practiceStartedAt = 0;
+    let currentPracticePrompt = '';
+    let currentPracticeFocus = 'accuracy';
+
+    function setPracticeStatus(message, state = '') {
+      practiceStatusEl.textContent = message;
+      practiceStatusEl.classList.remove('error', 'success');
+      if (state) practiceStatusEl.classList.add(state);
+    }
+
+    let chatAwaitingDefinition = false;
+    let lastFailedChatMessage = '';
+    let chatRequestInFlight = false;
+
+    function appendChatMessage(sender, message) {
+      const bubble = document.createElement('div');
+      bubble.className = `chat-message ${sender}`;
+      bubble.textContent = message;
+      chatTranscriptEl.appendChild(bubble);
+      chatTranscriptEl.scrollTop = chatTranscriptEl.scrollHeight;
+    }
+
+    async function sendChatMessage(message, mode = 'online', showUserMessage = true) {
+      if (chatRequestInFlight) return;
+      if (showUserMessage) appendChatMessage('user', message);
+      chatFallbackEl.hidden = true;
+      chatFallbackActionsEl.hidden = true;
+      chatRequestInFlight = true;
+      chatSendBtnEl.disabled = true;
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message,
+            awaiting_definition: chatAwaitingDefinition,
+            mode
+          })
+        });
+        const result = await response.json();
+        if (response.status === 503 && result.online_unavailable) {
+          lastFailedChatMessage = message;
+          chatAwaitingDefinition = Boolean(result.awaiting_definition);
+          appendChatMessage('assistant', 'I couldn’t reach the online dictionary. Retry, or try offline.');
+          chatFallbackEl.hidden = false;
+          chatFallbackActionsEl.hidden = false;
+          return;
+        }
+        if (!response.ok) throw new Error(result.error || 'The word helper could not answer.');
+        chatAwaitingDefinition = Boolean(result.awaiting_definition);
+        lastFailedChatMessage = '';
+        appendChatMessage('assistant', result.reply);
+      } catch (error) {
+        appendChatMessage('assistant', `I couldn’t reach the local word helper: ${error.message}. Check that server.py is running.`);
+      } finally {
+        chatRequestInFlight = false;
+        chatSendBtnEl.disabled = false;
+        chatInputEl.focus();
+      }
+    }
+
+    chatFormEl.addEventListener('submit', event => {
+      event.preventDefault();
+      const message = chatInputEl.value.trim();
+      if (!message) return;
+      chatInputEl.value = '';
+      void sendChatMessage(message);
+    });
+
+    chatInputEl.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        chatFormEl.requestSubmit();
+      }
+    });
+
+    document.getElementById('retryOnlineBtn').addEventListener('click', () => {
+      if (lastFailedChatMessage) void sendChatMessage(lastFailedChatMessage, 'online', false);
+    });
+
+    document.getElementById('tryOfflineBtn').addEventListener('click', () => {
+      if (lastFailedChatMessage) void sendChatMessage(lastFailedChatMessage, 'offline', false);
+    });
+
+    generatePracticeBtnEl.addEventListener('click', async () => {
+      generatePracticeBtnEl.disabled = true;
+      checkPracticeBtnEl.disabled = true;
+      setPracticeStatus('Making a new exercise...');
+      try {
+        const response = await fetch('/api/practice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            difficulty: practiceDifficultyEl.value,
+            focus: practiceFocusEl.value
+          })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'The coach could not make an exercise.');
+        currentPracticePrompt = result.prompt;
+        currentPracticeFocus = result.focus;
+        practicePromptEl.textContent = currentPracticePrompt;
+        practiceInputEl.value = '';
+        practiceInputEl.disabled = false;
+        checkPracticeBtnEl.disabled = false;
+        practiceStartedAt = performance.now();
+        setPracticeStatus(`Focus: ${result.focus}.`);
+        practiceInputEl.focus();
+      } catch (error) {
+        setPracticeStatus(`The coach is unavailable: ${error.message}. Start the app with python server.py.`, 'error');
+      } finally {
+        generatePracticeBtnEl.disabled = false;
+      }
+    });
+
+    checkPracticeBtnEl.addEventListener('click', async () => {
+      if (!currentPracticePrompt || !practiceInputEl.value.trim()) {
+        setPracticeStatus('Type the exercise first.', 'error');
+        return;
+      }
+      checkPracticeBtnEl.disabled = true;
+      try {
+        const elapsedSeconds = Math.max(1, (performance.now() - practiceStartedAt) / 1000);
+        const response = await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            target: currentPracticePrompt,
+            typed: practiceInputEl.value,
+            elapsed_seconds: elapsedSeconds,
+            focus: currentPracticeFocus
+          })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'The coach could not check your typing.');
+        setPracticeStatus(
+          `${result.accuracy}% accuracy · ${result.wpm} WPM. ${result.feedback}`,
+          'success'
+        );
+      } catch (error) {
+        setPracticeStatus(`Could not check this attempt: ${error.message}`, 'error');
+      } finally {
+        checkPracticeBtnEl.disabled = false;
+      }
+    });
 
     async function startGame() {
       if (currentProfileRole === 'banned') return;
@@ -1629,11 +1907,18 @@
       sessionStorage.removeItem('typingCurrentUser');
       updateAccountUI();
     });
-    logoutBtnEl.addEventListener('click', () => {
-      supabaseClient.auth.signOut().then(() => {
-        sessionStorage.removeItem('typingCurrentUser');
-        updateAccountUI();
-      });
+    logoutBtnEl.addEventListener('click', async () => {
+      const { error } = await supabaseClient.auth.signOut();
+      if (error) {
+        console.error('Sign out failed:', error);
+        accountStatusEl.textContent = `Unable to sign out (${error.code || 'unknown'}): ${error.message}`;
+        return;
+      }
+      authenticatedUserEmail = '';
+      currentProfileRole = 'user';
+      canGrantRoles = false;
+      sessionStorage.removeItem('typingCurrentUser');
+      updateAccountUI();
     });
     document.getElementById('bannedSignOutBtn').addEventListener('click', async () => {
       bannedErrorEl.textContent = '';
@@ -1649,12 +1934,14 @@
       else {
         authenticatedUserEmail = '';
         currentProfileRole = 'user';
+        canGrantRoles = false;
         sessionStorage.removeItem('typingCurrentUser');
         updateAccountUI();
       }
     });
 
     function openAdminPanel() {
+      workspaceEl.classList.remove('owner-open', 'riyaz-open');
       workspaceEl.classList.add('panel-open');
     }
 
@@ -1666,6 +1953,7 @@
 
     function openOwnerPanel() {
       workspaceEl.classList.remove('panel-open');
+      workspaceEl.classList.remove('riyaz-open');
       workspaceEl.classList.add('owner-open');
     }
     function closeOwnerPanel() {
@@ -1673,56 +1961,66 @@
     }
     document.getElementById('closeOwnerBtn').addEventListener('click', closeOwnerPanel);
 
+    function openRiyazPanel() {
+      workspaceEl.classList.remove('panel-open', 'owner-open');
+      workspaceEl.classList.add('riyaz-open');
+    }
+    function closeRiyazPanel() {
+      workspaceEl.classList.remove('riyaz-open');
+    }
+    document.getElementById('closeRiyazBtn').addEventListener('click', closeRiyazPanel);
+
     document.getElementById('giveRoleBtn').addEventListener('click', async () => {
-      const targetName = roleUserInputEl.value.trim().replace(/^user:\s*/i, '');
+      const target = roleUserInputEl.value.trim().replace(/^user:\s*/i, '');
+      const role = roleSelectEl.value;
       roleMessageEl.classList.remove('success');
-      if (!targetName) {
-        roleMessageEl.innerText = 'Enter a player name or email first.';
+      if (!hasRiyazPanelAccess()) {
+        roleMessageEl.textContent = 'Your account is not authorized to open this panel.';
+        return;
+      }
+      if (!target) {
+        roleMessageEl.textContent = 'Enter a player email, name, or Supabase user ID.';
         return;
       }
 
-      const normalizedTarget = targetName.toLowerCase();
-      const { data: targetProfiles, error: profileError } = await supabaseClient.rpc('find_profile_for_role_grant', {
-        p_query: normalizedTarget
+      const { data: matches, error: lookupError } = await supabaseClient.rpc('find_profile_for_role_grant', {
+        p_query: target.toLowerCase()
       });
-      if (profileError) {
-        console.error('Profile lookup failed:', profileError);
-        if (profileError.code === '42501') {
-          roleMessageEl.innerText = 'Your account is not authorized to look up players.';
-        } else if (profileError.code === 'PGRST202' || profileError.code === '42883') {
-          roleMessageEl.innerText = 'Profile lookup is not enabled yet. Apply the profile lookup SQL migration in Supabase.';
+      if (lookupError) {
+        console.error('Role-grant player lookup failed:', lookupError);
+        if (lookupError.code === '42501') {
+          roleMessageEl.textContent = 'Your signed-in account is not authorized to look up players.';
         } else {
-          roleMessageEl.innerText = `Unable to look up players (${profileError.code || 'unknown'}): ${profileError.message}`;
+          roleMessageEl.textContent = `Unable to find player (${lookupError.code || 'unknown'}): ${lookupError.message}`;
         }
         return;
       }
-      const matches = targetProfiles || [];
-      if (!matches.length) {
-        roleMessageEl.innerText = 'No matching Supabase account was found. Enter the exact email; the player must have signed up first.';
+      if (!matches?.length) {
+        roleMessageEl.textContent = 'No matching Supabase account was found.';
         return;
       }
       if (matches.length > 1) {
-        roleMessageEl.innerText = 'More than one player has that name. Enter their email instead.';
+        roleMessageEl.textContent = 'More than one player has that name. Enter their email or user ID.';
         return;
       }
 
-      const { error: roleError } = await supabaseClient.rpc('grant_profile_role', {
+      const { error: grantError } = await supabaseClient.rpc('grant_profile_role', {
         p_target_user_id: matches[0].id,
-        p_role: roleSelectEl.value
+        p_role: role
       });
-      if (roleError) {
-        console.error('Role grant failed:', roleError);
-        if (roleError.code === '42501') {
-          roleMessageEl.innerText = 'Your account is not authorized to grant roles.';
-        } else if (roleError.code === 'PGRST202' || roleError.code === '42883') {
-          roleMessageEl.innerText = 'Role grants are not enabled yet. Apply the latest role-grant SQL migration in Supabase.';
+      if (grantError) {
+        console.error('Role grant failed:', grantError);
+        if (grantError.code === '42501') {
+          roleMessageEl.textContent = 'Your account is not authorized to grant that role, or the target is protected.';
+        } else if (grantError.code === 'PGRST202' || grantError.code === '42883') {
+          roleMessageEl.textContent = 'Role grants are not set up yet. Apply the latest role-grant migration in Supabase.';
         } else {
-          roleMessageEl.innerText = 'Unable to grant that role. Check the browser console for the Supabase error.';
+          roleMessageEl.textContent = `Unable to grant role (${grantError.code || 'unknown'}): ${grantError.message}`;
         }
         return;
       }
 
-      roleMessageEl.innerText = `Role ${roleSelectEl.value} given to ${matches[0].display_name || matches[0].email}.`;
+      roleMessageEl.textContent = `Role ${role} given to ${matches[0].display_name || matches[0].email}.`;
       roleMessageEl.classList.add('success');
     });
 
@@ -1896,6 +2194,15 @@
         return;
       }
       if (currentProfileRole === 'banned') return;
+      if (event.key === '[') {
+        if (event.target instanceof HTMLElement &&
+            (event.target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName))) return;
+        if (!hasRiyazPanelAccess()) return;
+        event.preventDefault();
+        if (workspaceEl.classList.contains('riyaz-open')) closeRiyazPanel();
+        else openRiyazPanel();
+        return;
+      }
       if (event.key !== '\\' && event.key !== ']') return;
       event.preventDefault();
       if (event.key === '\\') {
